@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pink Dental Spa - Assessment & Video Intro</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            background-color: #ffffff; 
+            overflow: hidden;
+            transition: background-color 1s ease;
+        }
+
+        .bg-slider {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+            opacity: 1; 
+            filter: blur(0px);
+            transform: scale(1);
+            transition: filter 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s ease;
+        }
+
+        .bg-blur-effect {
+            filter: blur(4px);
+            transform: scale(1.03);
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.2); 
+            z-index: 1;
+            transition: background 1s ease;
+        }
+
+        #smokeCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2; 
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .quiz-container {
+            position: relative;
+            z-index: 3;
+            background: transparent; 
+            border: none;
+            padding: 20px;
+            width: 90%;
+            max-width: 440px;
+            box-shadow: none;
+            text-align: center;
+            transform: scale(1);
+            opacity: 1;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-in-out;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .welcome-video {
+            width: 100%;
+            max-width: 380px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.2), 0 0 15px rgba(0,0,0,0.1);
+            outline: none;
+            background-color: #000;
+            object-fit: cover;
+        }
+
+        .start-btn {
+            background: rgba(255, 20, 147, 0.15);
+            border: 1px solid rgba(255, 20, 147, 0.5);
+            padding: 16px 60px;
+            border-radius: 30px;
+            color: #ff1493; 
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 1.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.1);
+        }
+
+        .start-btn:hover, .start-btn:active {
+            background: rgba(255, 20, 147, 0.8);
+            border-color: #ff1493;
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.3);
+        }
+
+        .quiz-pull-out {
+            transform: scale(0.92);
+            opacity: 0;
+        }
+
+        .quiz-pull-in-prepare {
+            transform: scale(1.08);
+            opacity: 0;
+            transition: none;
+        }
+
+        h2 {
+            margin-bottom: 40px;
+            font-size: 1.5rem;
+            line-height: 1.6;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .option-btn {
+            background: rgba(255, 20, 147, 0.18); 
+            border: 1px solid rgba(255, 20, 147, 0.4); 
+            padding: 20px 24px;
+            border-radius: 20px;
+            color: #ffffff; 
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            text-align: right;
+            width: 100%;
+            outline: none;
+        }
+
+        .option-btn:hover, .option-btn:active {
+            background: rgba(255, 20, 147, 0.45); 
+            border-color: rgba(255, 20, 147, 0.8);
+            color: #ffffff;
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.25);
+        }
+
+        @keyframes glassSelected {
+            0% { 
+                background: rgba(255, 20, 147, 0.45);
+                color: #ffffff;
+            }
+            100% { 
+                background: #ff1493; 
+                border-color: #ff1493;
+                color: #ffffff;
+                text-shadow: none;
+                transform: scale(1.04);
+                box-shadow: 0 10px 25px rgba(255, 20, 147, 0.35);
+            }
+        }
+
+        .btn-selected {
+            animation: glassSelected 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            pointer-events: none;
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.15;
+            transform: scale(0.96);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .pink-warning-mode {
+            background-color: #ffffff !important; 
+        }
+
+        .pink-warning-mode #bg-layer {
+            display: none !important; 
+        }
+
+        .pink-warning-mode .overlay {
+            background: transparent !important; 
+        }
+
+        .pink-warning-mode .result-badge {
+            color: #db0072 !important; 
+            text-shadow: 0 0 15px rgba(255, 20, 147, 0.2);
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .result-badge {
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #ff1493;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: fadeInResult 1.2s cubic-bezier(0.215, 0.610, 0.355, 1) forwards;
+        }
+
+        @keyframes fadeInResult {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slider" id="bg-layer"></div>
+    <div class="overlay" id="overlay-layer"></div>
+
+    <canvas id="smokeCanvas"></canvas>
+
+    <div class="quiz-container" id="quiz-box">
+        
+        <div id="welcome-screen" class="welcome-screen">
+            <video class="welcome-video" loop playsinline id="introVideo">
+                <source src="intro.mp4" type="video/mp4">
+                متصفحك لا يدعم تشغيل الفيديو.
+            </video>
+            <button class="start-btn" id="start-quiz-btn">START</button>
+        </div>
+
+        <div id="question-screen" class="hidden">
+            <h2 id="question-text">جاري تحضير تجربة الـ Spa...</h2>
+            <div class="options-list" id="options-container"></div>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <div id="badge-container" class="result-badge"></div>
+        </div>
+    </div>
+
+    <script>
+        const clickSound = new Audio('click.wav');
+        clickSound.volume = 0.5;
+
+        let isAudioUnlocked = false;
+
+        function unlockMobileAudio() {
+            if (isAudioUnlocked) return;
+            const playPromise = clickSound.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    clickSound.pause();
+                    clickSound.currentTime = 0;
+                }).catch(err => {});
+            }
+            isAudioUnlocked = true;
+        }
+
+        const quizData = [
+            {
+                question: "كم مرة تشرب قهوة او شاي يوميا؟",
+                options: ["ولا مرة", "مرة او مرتان", "من ثلاث الى خمس مرات", "عايش عليها"],
+                scores: [0, 2, 4, 5],
+                image: "https://i.ibb.co/8nNyBzHJ/Chat-GPT-Image-May-19-2026-08-10-55-PM.png"
+            },
+            {
+                question: "هل تدخن؟",
+                options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"],
+                scores: [0, 2, 4, 5],
+                image: "https://i.ibb.co/8L8jBprw/Chat-GPT-Image-May-19-2026-08-13-47-PM.png"
+            },
+            {
+                question: "هل تشرب ماء كافي يوميا؟",
+                options: ["نعم", "أحياناً", "لا"],
+                scores: [0, 2, 4],
+                image: "https://i.ibb.co/wNCLdfxV/Chat-GPT-Image-May-19-2026-08-12-22-PM.png"
+            },
+            {
+                question: "احد عرض عليك علكة او نعناع بشكل مفاجئ؟",
+                options: ["لا", "احيانا", "مرات متكررة"],
+                scores: [0, 2, 5],
+                image: "https://i.ibb.co/Xfjn6fY7/Chat-GPT-Image-19-2026-08-15-51.png"
+            },
+            {
+                question: "تحس بجفاف بالفم؟",
+                options: ["نادرا", "احيانا", "دائما"],
+                scores: [0, 2, 5],
+                image: "https://i.ibb.co/gbcz4nwL/Chat-GPT-Image-May-19-2026-08-16-45-PM.png"
+            },
+            {
+                question: "تحس الناس تبتعد و انت تحجي؟",
+                options: ["لا", "يمكن", "صارت اكثر من مرة"],
+                scores: [0, 2, 5],
+                image: "https://i.ibb.co/ztkyt1z/d6424df4-f586-4c90-8828-c84638dbab28.png"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let totalScore = 0;
+
+        const quizBox = document.getElementById('quiz-box');
+        const bgLayer = document.getElementById('bg-layer');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const questionScreen = document.getElementById('question-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const badgeContainer = document.getElementById('badge-container');
+        const smokeCanvas = document.getElementById('smokeCanvas');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const introVideo = document.getElementById('introVideo');
+
+        // تشغيل مبدئي صامت حتى يتفاعل المستخدم
+        introVideo.muted = true;
+        introVideo.play().catch(e => {});
+
+        startQuizBtn.addEventListener('click', () => {
+            unlockMobileAudio();
+            
+            // تشغيل الفيديو مع الصوت من البداية فور الضغط على START
+            introVideo.muted = false;
+            introVideo.currentTime = 0;
+            introVideo.play().catch(e => { console.log("Video playback error:", e) });
+
+            // إضافة تأثير اختفاء تدريجي بسيط متناسق مع نهاية الفيديو
+            setTimeout(() => {
+                quizBox.classList.add('quiz-pull-out');
+            }, 2500); // يبدأ الاختفاء قبل النهاية بنصف ثانية لنعومة الحركة
+
+            // الانتظار 3 ثوانٍ كاملة (مدة الفيديو) قبل الانتقال لشاشة الأسئلة
+            setTimeout(() => {
+                welcomeScreen.classList.add('hidden');
+                questionScreen.classList.remove('hidden');
+                quizBox.classList.remove('quiz-pull-out');
+                quizBox.classList.add('quiz-pull-in-prepare');
+                
+                // إيقاف الفيديو نهائياً عند الانتقال
+                introVideo.pause();
+
+                setTimeout(() => {
+                    quizBox.style.transition = '';
+                    loadQuestion();
+                }, 50);
+            }, 3000); // 3000ms تعادل 3 ثوانٍ بالضبط
+        });
+
+        function loadQuestion() {
+            const currentData = quizData[currentQuestionIndex];
+            
+            quizBox.classList.remove('quiz-pull-out', 'quiz-pull-in-prepare');
+            bgLayer.classList.remove('bg-blur-effect');
+            
+            bgLayer.style.backgroundImage = `url('${currentData.image}')`;
+            questionText.innerText = currentData.question;
+            optionsContainer.innerHTML = '';
+
+            currentData.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.classList.add('option-btn');
+                button.innerText = option;
+                button.addEventListener('click', (e) => handleAnswer(e, index));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(e, selectedIndex) {
+            const selectedButton = e.target;
+            const allButtons = optionsContainer.querySelectorAll('.option-btn');
+            const currentData = quizData[currentQuestionIndex];
+
+            totalScore += currentData.scores[selectedIndex];
+            
+            clickSound.currentTime = 0;
+            clickSound.play().catch(e => {});
+
+            selectedButton.classList.add('btn-selected');
+
+            allButtons.forEach(btn => {
+                if (btn !== selectedButton) btn.classList.add('disabled');
+            });
+
+            setTimeout(() => {
+                quizBox.classList.add('quiz-pull-out');
+                bgLayer.classList.add('bg-blur-effect');
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < quizData.length) {
+                        quizBox.style.transition = 'none';
+                        quizBox.classList.remove('quiz-pull-out');
+                        quizBox.classList.add('quiz-pull-in-prepare');
+                        
+                        setTimeout(() => {
+                            quizBox.style.transition = '';
+                            loadQuestion();
+                        }, 50);
+                    } else {
+                        showResults();
+                    }
+                }, 600);
+            }, 600);
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 0.8 } });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 0.8 } });
+                if (Date.now() < end) { requestAnimationFrame(frame); }
+            }());
+        }
+
+        function triggerCustomPinkSmoke() {
+            smokeCanvas.style.opacity = "1";
+            const ctx = smokeCanvas.getContext('2d');
+            
+            function resizeCanvas() {
+                smokeCanvas.width = window.innerWidth;
+                smokeCanvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            const smokeParticles = [];
+            const sparkleParticles = [];
+            
+            class SmokeParticle {
+                constructor() { this.reset(true); }
+                reset(init = false) {
+                    this.x = init ? Math.random() * (smokeCanvas.width * 0.3) : -Math.random() * 50;
+                    this.y = Math.random() * smokeCanvas.height;
+                    this.size = Math.random() * 140 + 110;
+                    this.speedX = Math.random() * 0.7 + 0.3;
+                    this.speedY = Math.random() * 0.4 - 0.2;
+                    this.opacity = Math.random() * 0.24 + 0.08; 
+                    this.vs = Math.random() * 0.1 + 0.05;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.size += this.vs;
+                    if (this.x > smokeCanvas.width * 0.55) { this.opacity -= 0.003; }
+                    if (this.x > smokeCanvas.width || this.opacity <= 0) { this.reset(); }
+                }
+                draw() {
+                    if (this.opacity <= 0) return;
+                    ctx.beginPath();
+                    let gradient = ctx.createRadialGradient(this.x, this.y, this.size * 0.05, this.x, this.y, this.size);
+                    gradient.addColorStop(0, `rgba(235, 20, 147, ${this.opacity})`); 
+                    gradient.addColorStop(0.5, `rgba(255, 105, 180, ${this.opacity * 0.4})`);
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            class SparkleParticle {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * (smokeCanvas.width * 0.45);
+                    this.y = Math.random() * smokeCanvas.height;
+                    this.size = Math.random() * 2.5 + 1;
+                    this.speedX = Math.random() * 1.1 + 0.4;
+                    this.speedY = Math.random() * 0.6 - 0.3;
+                    this.opacity = Math.random() * 0.9 + 0.3;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x > smokeCanvas.width * 0.5) { this.opacity -= 0.015; }
+                    if (this.x > smokeCanvas.width || this.opacity <= 0) { this.reset(); }
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.fillStyle = `rgba(219, 0, 114, ${this.opacity})`; 
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = "#ff1493";
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            for (let i = 0; i < 35; i++) smokeParticles.push(new SmokeParticle());
+            for (let i = 0; i < 25; i++) sparkleParticles.push(new SparkleParticle());
+
+            function animate() {
+                ctx.clearRect(0, 0, smokeCanvas.width, smokeCanvas.height);
+                smokeParticles.forEach(p => { p.update(); p.draw(); });
+                sparkleParticles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function showResults() {
+            questionScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            quizBox.style.transition = '';
+            quizBox.classList.remove('quiz-pull-out', 'quiz-pull-in-prepare');
+            
+            let resultWord = "";
+            if (totalScore <= 9) {
+                resultWord = "Pink Fresh";
+                triggerConfetti();
+            } else if (totalScore >= 10 && totalScore <= 20) {
+                document.body.classList.add('pink-warning-mode');
+                resultWord = "Pink Warning 🫣";
+                triggerCustomPinkSmoke(); 
+            } else if (totalScore >= 21) {
+                document.body.classList.add('pink-warning-mode');
+                resultWord = "Pink Need ReFresh";
+                triggerCustomPinkSmoke();
+            }
+            badgeContainer.innerText = resultWord;
+        }
+    </script>
+</body>
+</html>
