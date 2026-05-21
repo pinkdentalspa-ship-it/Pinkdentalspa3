@@ -20,9 +20,9 @@
             align-items: center;
             min-height: 100vh;
             position: relative;
-            background-color: #ffffff; 
+            background-color: #ffffff; /* خلفية بيضاء افتراضية لواجهة الفيديو */
             overflow: hidden;
-            transition: background-color 1s ease;
+            transition: background 1s ease, background-color 1s ease;
         }
 
         .bg-slider {
@@ -49,6 +49,11 @@
             background: rgba(0, 0, 0, 0.2); 
             z-index: 1;
             transition: background 1s ease;
+        }
+
+        /* تعديل الأوفرلاي ليكون شفافاً في الشاشة الرئيسية للحفاظ على بياض الخلفية */
+        .welcome-overlay {
+            background: transparent !important;
         }
 
         #smokeCanvas {
@@ -89,7 +94,7 @@
             width: 100%;
             max-width: 380px;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.2), 0 0 15px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.15), 0 0 15px rgba(0,0,0,0.05);
             outline: none;
             background-color: #000;
             object-fit: cover;
@@ -198,33 +203,56 @@
             display: none !important;
         }
 
-        .pink-warning-mode {
-            background-color: #ffffff !important; 
+        /* وضعيات النتائج لتغيير الخلفيات بشكل كلي وثابت */
+        .mode-white-bg {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        .mode-white-bg #bg-layer { display: none !important; }
+        .mode-white-bg .overlay { background: transparent !important; }
+
+        /* وضعية التوهج القوي والخلفية الوردية المضيئة لـ Almost Pink Glow */
+        .mode-almost-glow {
+            background: radial-gradient(circle, #ff69b4 0%, #ff1493 100%) !important;
+            animation: pulseGlow 2s infinite alternate;
+        }
+        .mode-almost-glow #bg-layer { display: none !important; }
+        .mode-almost-glow .overlay { background: rgba(0, 0, 0, 0.05) !important; }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: inset 0 0 50px rgba(255,255,255,0.2); }
+            100% { box-shadow: inset 0 0 100px rgba(255,255,255,0.5); }
         }
 
-        .pink-warning-mode #bg-layer {
-            display: none !important; 
-        }
-
-        .pink-warning-mode .overlay {
-            background: transparent !important; 
-        }
-
-        .pink-warning-mode .result-badge {
-            color: #db0072 !important; 
-            text-shadow: 0 0 15px rgba(255, 20, 147, 0.2);
-            font-family: 'Segoe UI', sans-serif;
-            font-weight: 800;
-            letter-spacing: 2px;
-        }
-
+        /* الـ Badge الرئيسي لعرض اسم النتيجة */
         .result-badge {
-            font-size: 3.2rem;
+            font-size: 3rem;
             font-weight: 900;
             color: #ff1493;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            animation: fadeInResult 1.2s cubic-bezier(0.215, 0.610, 0.355, 1) forwards;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            animation: fadeInResult 1s cubic-bezier(0.215, 0.610, 0.355, 1) forwards;
+        }
+
+        /* الـ Score لعرض النسبة المئوية العشرية */
+        .result-score {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333333;
+            margin-top: 10px;
+            animation: fadeInResult 1.4s cubic-bezier(0.215, 0.610, 0.355, 1) forwards;
+        }
+
+        /* ستايل مخصص للخط للتأكيد على الـ Strong Glow */
+        .strong-glow-text {
+            color: #ffffff !important;
+            text-shadow: 0 0 20px #ffffff, 0 0 40px #ff1493, 0 0 60px #ff1493 !important;
+        }
+        
+        .strong-glow-score {
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8) !important;
         }
 
         @keyframes fadeInResult {
@@ -236,13 +264,15 @@
 <body>
 
     <div class="bg-slider" id="bg-layer"></div>
-    <div class="overlay" id="overlay-layer"></div>
+    <!-- تم إضافة كلاس welcome-overlay لجعل واجهة الفيديو بيضاء بدون قناع مظلم -->
+    <div class="overlay welcome-overlay" id="overlay-layer"></div>
 
     <canvas id="smokeCanvas"></canvas>
 
     <div class="quiz-container" id="quiz-box">
         
         <div id="welcome-screen" class="welcome-screen">
+            <!-- تمت إزالة التشغيل التلقائي المبدئي لكي يبدأ بدقة عند الضغط على Start -->
             <video class="welcome-video" loop playsinline id="introVideo">
                 <source src="intro.mp4" type="video/mp4">
                 متصفحك لا يدعم تشغيل الفيديو.
@@ -257,11 +287,12 @@
 
         <div id="result-screen" class="hidden">
             <div id="badge-container" class="result-badge"></div>
+            <div id="score-container" class="result-score"></div>
         </div>
     </div>
 
     <script>
-        const clickSound = new Audio('click.wav');
+        const clickSound = new Audio('click.mp3');
         clickSound.volume = 0.5;
 
         let isAudioUnlocked = false;
@@ -278,42 +309,43 @@
             isAudioUnlocked = true;
         }
 
+        // تم تحديث الأسكورات داخل المصفوفة مباشرة بناءً على تقسيمك الجديد لحسابها ديناميكياً
         const quizData = [
             {
                 question: "كم مرة تشرب قهوة او شاي يوميا؟",
                 options: ["ولا مرة", "مرة او مرتان", "من ثلاث الى خمس مرات", "عايش عليها"],
-                scores: [0, 2, 4, 5],
-                image: "https://i.ibb.co/8nNyBzHJ/Chat-GPT-Image-May-19-2026-08-10-55-PM.png"
+                scores: [100, 70, 35, 0], // نظام السؤال الأول
+                image: "bg1.png"
             },
             {
                 question: "هل تدخن؟",
                 options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"],
-                scores: [0, 2, 4, 5],
-                image: "https://i.ibb.co/8L8jBprw/Chat-GPT-Image-May-19-2026-08-13-47-PM.png"
+                scores: [100, 70, 35, 0], // نظام السؤال الثاني
+                image: "bg2.png"
             },
             {
                 question: "هل تشرب ماء كافي يوميا؟",
                 options: ["نعم", "أحياناً", "لا"],
-                scores: [0, 2, 4],
-                image: "https://i.ibb.co/wNCLdfxV/Chat-GPT-Image-May-19-2026-08-12-22-PM.png"
+                scores: [100, 50, 0], // باقي الأسئلة
+                image: "bg3.png"
             },
             {
                 question: "احد عرض عليك علكة او نعناع بشكل مفاجئ؟",
                 options: ["لا", "احيانا", "مرات متكررة"],
-                scores: [0, 2, 5],
-                image: "https://i.ibb.co/Xfjn6fY7/Chat-GPT-Image-19-2026-08-15-51.png"
+                scores: [100, 50, 0],
+                image: "bg4.png"
             },
             {
                 question: "تحس بجفاف بالفم؟",
                 options: ["نادرا", "احيانا", "دائما"],
-                scores: [0, 2, 5],
-                image: "https://i.ibb.co/gbcz4nwL/Chat-GPT-Image-May-19-2026-08-16-45-PM.png"
+                scores: [100, 50, 0],
+                image: "bg5.png"
             },
             {
                 question: "تحس الناس تبتعد و انت تحجي؟",
                 options: ["لا", "يمكن", "صارت اكثر من مرة"],
-                scores: [0, 2, 5],
-                image: "https://i.ibb.co/ztkyt1z/d6424df4-f586-4c90-8828-c84638dbab28.png"
+                scores: [100, 50, 0],
+                image: "bg6.png"
             }
         ];
 
@@ -322,6 +354,7 @@
 
         const quizBox = document.getElementById('quiz-box');
         const bgLayer = document.getElementById('bg-layer');
+        const overlayLayer = document.getElementById('overlay-layer');
         const questionText = document.getElementById('question-text');
         const optionsContainer = document.getElementById('options-container');
         
@@ -329,42 +362,40 @@
         const questionScreen = document.getElementById('question-screen');
         const resultScreen = document.getElementById('result-screen');
         const badgeContainer = document.getElementById('badge-container');
+        const scoreContainer = document.getElementById('score-container');
         const smokeCanvas = document.getElementById('smokeCanvas');
         const startQuizBtn = document.getElementById('start-quiz-btn');
         const introVideo = document.getElementById('introVideo');
 
-        // تشغيل مبدئي صامت حتى يتفاعل المستخدم
-        introVideo.muted = true;
-        introVideo.play().catch(e => {});
-
         startQuizBtn.addEventListener('click', () => {
             unlockMobileAudio();
             
-            // تشغيل الفيديو مع الصوت من البداية فور الضغط على START
+            // يبدأ الفيديو بالعمل فوراً عند الضغط على زر START
             introVideo.muted = false;
             introVideo.currentTime = 0;
             introVideo.play().catch(e => { console.log("Video playback error:", e) });
 
-            // إضافة تأثير اختفاء تدريجي بسيط متناسق مع نهاية الفيديو
             setTimeout(() => {
                 quizBox.classList.add('quiz-pull-out');
-            }, 2500); // يبدأ الاختفاء قبل النهاية بنصف ثانية لنعومة الحركة
+            }, 2500); 
 
-            // الانتظار 3 ثوانٍ كاملة (مدة الفيديو) قبل الانتقال لشاشة الأسئلة
             setTimeout(() => {
                 welcomeScreen.classList.add('hidden');
                 questionScreen.classList.remove('hidden');
+                
+                // إزالة القناع الشفاف المخصص للترحيب ليعود القناع الطبيعي للأسئلة لضمان وضوح النصوص فوق الصور
+                overlayLayer.classList.remove('welcome-overlay');
+                
                 quizBox.classList.remove('quiz-pull-out');
                 quizBox.classList.add('quiz-pull-in-prepare');
                 
-                // إيقاف الفيديو نهائياً عند الانتقال
                 introVideo.pause();
 
                 setTimeout(() => {
                     quizBox.style.transition = '';
                     loadQuestion();
                 }, 50);
-            }, 3000); // 3000ms تعادل 3 ثوانٍ بالضبط
+            }, 3000); 
         });
 
         function loadQuestion() {
@@ -425,16 +456,17 @@
         }
 
         function triggerConfetti() {
-            var duration = 3 * 1000;
+            var duration = 4 * 1000;
             var end = Date.now() + duration;
             (function frame() {
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 0.8 } });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 0.8 } });
+                confetti({ particleCount: 6, angle: 60, spread: 60, origin: { x: 0, y: 0.8 } });
+                confetti({ particleCount: 6, angle: 120, spread: 60, origin: { x: 1, y: 0.8 } });
                 if (Date.now() < end) { requestAnimationFrame(frame); }
             }());
         }
 
-        function triggerCustomPinkSmoke() {
+        // تم تطوير نظام الدخان والجزيئات ليدعم الكثافة العالية (Dense Particles) عند الطلب
+        function triggerCustomPinkSmoke(denseMode = false) {
             smokeCanvas.style.opacity = "1";
             const ctx = smokeCanvas.getContext('2d');
             
@@ -448,30 +480,42 @@
             const smokeParticles = [];
             const sparkleParticles = [];
             
+            // إذا كانت الوضعية كثيفة (Almost Pink Glow) نضاعف عدد الجزيئات لزيادة التأثير البصري
+            const smokeCount = denseMode ? 70 : 35;
+            const sparkleCount = denseMode ? 80 : 25;
+
             class SmokeParticle {
                 constructor() { this.reset(true); }
                 reset(init = false) {
-                    this.x = init ? Math.random() * (smokeCanvas.width * 0.3) : -Math.random() * 50;
+                    this.x = init ? Math.random() * (smokeCanvas.width * 0.4) : -Math.random() * 50;
                     this.y = Math.random() * smokeCanvas.height;
                     this.size = Math.random() * 140 + 110;
-                    this.speedX = Math.random() * 0.7 + 0.3;
+                    this.speedX = denseMode ? (Math.random() * 1.2 + 0.5) : (Math.random() * 0.7 + 0.3);
                     this.speedY = Math.random() * 0.4 - 0.2;
-                    this.opacity = Math.random() * 0.24 + 0.08; 
+                    this.opacity = denseMode ? (Math.random() * 0.4 + 0.15) : (Math.random() * 0.24 + 0.08); 
                     this.vs = Math.random() * 0.1 + 0.05;
                 }
                 update() {
                     this.x += this.speedX;
                     this.y += this.speedY;
                     this.size += this.vs;
-                    if (this.x > smokeCanvas.width * 0.55) { this.opacity -= 0.003; }
+                    if (this.x > smokeCanvas.width * 0.6) { this.opacity -= 0.003; }
                     if (this.x > smokeCanvas.width || this.opacity <= 0) { this.reset(); }
                 }
                 draw() {
                     if (this.opacity <= 0) return;
                     ctx.beginPath();
                     let gradient = ctx.createRadialGradient(this.x, this.y, this.size * 0.05, this.x, this.y, this.size);
-                    gradient.addColorStop(0, `rgba(235, 20, 147, ${this.opacity})`); 
-                    gradient.addColorStop(0.5, `rgba(255, 105, 180, ${this.opacity * 0.4})`);
+                    
+                    if(denseMode) {
+                        // ألوان مضيئة وساطعة أكثر للـ Glow القوي
+                        gradient.addColorStop(0, `rgba(255, 20, 147, ${this.opacity})`);
+                        gradient.addColorStop(0.3, `rgba(255, 105, 180, ${this.opacity * 0.6})`);
+                        gradient.addColorStop(0.7, `rgba(255, 192, 203, ${this.opacity * 0.2})`);
+                    } else {
+                        gradient.addColorStop(0, `rgba(235, 20, 147, ${this.opacity})`); 
+                        gradient.addColorStop(0.5, `rgba(255, 105, 180, ${this.opacity * 0.4})`);
+                    }
                     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                     ctx.fillStyle = gradient;
                     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -482,23 +526,23 @@
             class SparkleParticle {
                 constructor() { this.reset(); }
                 reset() {
-                    this.x = Math.random() * (smokeCanvas.width * 0.45);
+                    this.x = Math.random() * (smokeCanvas.width * 0.5);
                     this.y = Math.random() * smokeCanvas.height;
-                    this.size = Math.random() * 2.5 + 1;
-                    this.speedX = Math.random() * 1.1 + 0.4;
+                    this.size = denseMode ? (Math.random() * 4 + 1.5) : (Math.random() * 2.5 + 1);
+                    this.speedX = denseMode ? (Math.random() * 2 + 0.8) : (Math.random() * 1.1 + 0.4);
                     this.speedY = Math.random() * 0.6 - 0.3;
                     this.opacity = Math.random() * 0.9 + 0.3;
                 }
                 update() {
                     this.x += this.speedX;
                     this.y += this.speedY;
-                    if (this.x > smokeCanvas.width * 0.5) { this.opacity -= 0.015; }
+                    if (this.x > smokeCanvas.width * 0.6) { this.opacity -= 0.015; }
                     if (this.x > smokeCanvas.width || this.opacity <= 0) { this.reset(); }
                 }
                 draw() {
                     ctx.beginPath();
-                    ctx.fillStyle = `rgba(219, 0, 114, ${this.opacity})`; 
-                    ctx.shadowBlur = 8;
+                    ctx.fillStyle = denseMode ? `rgba(255, 255, 255, ${this.opacity})` : `rgba(219, 0, 114, ${this.opacity})`; 
+                    ctx.shadowBlur = denseMode ? 12 : 8;
                     ctx.shadowColor = "#ff1493";
                     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                     ctx.fill();
@@ -506,8 +550,8 @@
                 }
             }
 
-            for (let i = 0; i < 35; i++) smokeParticles.push(new SmokeParticle());
-            for (let i = 0; i < 25; i++) sparkleParticles.push(new SparkleParticle());
+            for (let i = 0; i < smokeCount; i++) smokeParticles.push(new SmokeParticle());
+            for (let i = 0; i < sparkleCount; i++) sparkleParticles.push(new SparkleParticle());
 
             function animate() {
                 ctx.clearRect(0, 0, smokeCanvas.width, smokeCanvas.height);
@@ -524,21 +568,42 @@
             quizBox.style.transition = '';
             quizBox.classList.remove('quiz-pull-out', 'quiz-pull-in-prepare');
             
+            // حساب المعدل النهائي الفعلي المقسم على 6 مع تقريب لمرتبة عشرية واحدة
+            let finalCalculatedScore = (totalScore / 6).toFixed(1);
+            
             let resultWord = "";
-            if (totalScore <= 9) {
-                resultWord = "Pink Fresh";
+            
+            // تطبيق الشروط الجديدة للنطاقات الرقمية والنتائج والمؤثرات البصرية
+            if (finalCalculatedScore > 91 && finalCalculatedScore <= 100) {
+                // النتيجة: Pink Glow -> خلفية بيضاء بالكامل + مؤثرات احتفال
+                document.body.classList.add('mode-white-bg');
+                resultWord = "Pink Glow";
                 triggerConfetti();
-            } else if (totalScore >= 10 && totalScore <= 20) {
-                document.body.classList.add('pink-warning-mode');
-                resultWord = "Pink Warning 🫣";
-                triggerCustomPinkSmoke(); 
-            } else if (totalScore >= 21) {
-                document.body.classList.add('pink-warning-mode');
-                resultWord = "Pink Need ReFresh";
-                triggerCustomPinkSmoke();
+                
+            } else if (finalCalculatedScore >= 89 && finalCalculatedScore <= 91) {
+                // النتيجة: Almost Pink Glow -> خلفية وردية مضيئة + توهج قوي + جزيئات كثيفة جداً
+                document.body.classList.add('mode-almost-glow');
+                badgeContainer.classList.add('strong-glow-text');
+                scoreContainer.classList.add('strong-glow-score');
+                resultWord = "Almost Pink Glow ✨";
+                triggerCustomPinkSmoke(true); // تشغيل الوضع الكثيف للجزيئات والتوهج القوي
+                
+            } else if (finalCalculatedScore >= 70 && finalCalculatedScore <= 88) {
+                // النتيجة: Pink Balance -> الحفاظ على مؤثرات الدخان المعتادة
+                resultWord = "Pink Balance";
+                triggerCustomPinkSmoke(false);
+                
+            } else if (finalCalculatedScore < 70) {
+                // النتيجة: Pink Revival -> الحفاظ على مؤثرات الدخان المعتادة
+                resultWord = "Pink Revival";
+                triggerCustomPinkSmoke(false);
             }
+            
+            // طباعة النتيجة النهائية والنسبة العشرية المحسوبة بدقة
             badgeContainer.innerText = resultWord;
+            scoreContainer.innerText = `${finalCalculatedScore}%`;
         }
     </script>
 </body>
 </html>
+
