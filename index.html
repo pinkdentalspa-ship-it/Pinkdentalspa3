@@ -63,7 +63,7 @@
             z-index: 99; 
             pointer-events: none; 
             opacity: 0;
-            transition: opacity 1s ease-in-out;
+            transition: opacity 1.2s ease-in-out;
         }
 
         .quiz-container {
@@ -316,16 +316,14 @@
     </div>
 
     <script>
-        // تعريف الملفات الصوتية المضافة
         const clickSound = new Audio('click.mp3');
         clickSound.volume = 0.5;
 
         const welcomeSound = new Audio('welcome.mp3');
-        welcomeSound.volume = 0.7; // مستوى صوت ناعم ومناسب للترحيب
+        welcomeSound.volume = 0.7; 
 
         let isAudioUnlocked = false;
 
-        // تهيئة وفك قفل المتصفحات على الهواتف لتسمح بتشغيل الأصوات تلقائياً لاحقاً
         function unlockMobileAudio() {
             if (isAudioUnlocked) return;
             [clickSound, welcomeSound].forEach(sound => {
@@ -348,7 +346,7 @@
                 image: "bg1.png"
             },
             {
-                question: "هل تدخن؟",
+                question: "هل تدخن？",
                 options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"],
                 scores: [100, 70, 35, 0],
                 image: "bg2.png"
@@ -379,6 +377,16 @@
             }
         ];
 
+        // ميزة التحميل المسبق للصور (Preloading) لضمان ظهورها الفوري وبدون تأخير
+        function preloadImages() {
+            quizData.forEach(data => {
+                const img = new Image();
+                img.src = data.image;
+            });
+        }
+        // استدعاء دالة التحميل المسبق فور تشغيل الصفحة
+        preloadImages();
+
         let currentQuestionIndex = 0;
         let totalScore = 0;
         let activeAnimationId = null; 
@@ -399,24 +407,29 @@
         const startQuizBtn = document.getElementById('start-quiz-btn');
         const introVideo = document.getElementById('introVideo');
 
+        // تحديد حجم الـ Canvas المبدئي فوراً عند فتح التطبيق لضمان جاهزيته للمؤثرات
+        function initCanvasDimensions() {
+            smokeCanvas.width = window.innerWidth;
+            smokeCanvas.height = window.innerHeight;
+        }
+        initCanvasDimensions();
+        window.addEventListener('resize', initCanvasDimensions);
+
         startQuizBtn.addEventListener('click', () => {
             unlockMobileAudio();
             
-            // تشغيل الفيديو غير مكتوم بناءً على تفاعل المستخدم
             introVideo.muted = false;
             introVideo.currentTime = 0;
             introVideo.play().catch(e => {});
 
-            // تشغيل تأثير الدخان كـ Overlay فوق الفيديو مباشرة
+            // تشغيل تأثير الدخان كـ Overlay فوق الفيديو فوراً وبدون مشاكل أبعاد
             initResultEffects('video-overlay');
 
-            // إخفاء صندوق الترحيب تمهيداً لعرض الأسئلة لاحقاً
             setTimeout(() => {
                 quizBox.classList.add('quiz-pull-out');
             }, 2500); 
         });
 
-        // الاستماع للحظة انتهاء تشغيل الفيديو بالكامل للانتقال الفوري للأسئلة وبدء صوت الـ Welcome
         introVideo.addEventListener('ended', () => {
             welcomeScreen.classList.add('hidden');
             questionScreen.classList.remove('hidden');
@@ -424,11 +437,10 @@
             quizBox.classList.remove('quiz-pull-out');
             quizBox.classList.add('quiz-pull-in-prepare');
             
-            // تشغيل صوت الترحيب فور انتهاء الفيديو
             welcomeSound.currentTime = 0;
             welcomeSound.play().catch(err => {});
 
-            // إيقاف دخان الفيديو مؤقتاً لتظهر خلفيات الأسئلة بوضوح
+            // إخفاء دخان الفيديو مؤقتاً لتظهر خلفية السؤال المجهزة مسبقاً بشكل نقي
             smokeCanvas.style.opacity = "0";
 
             setTimeout(() => {
@@ -512,18 +524,17 @@
             smokeCanvas.style.opacity = "1";
             const ctx = smokeCanvas.getContext('2d');
             
-            function resizeCanvas() {
-                smokeCanvas.width = window.innerWidth;
-                smokeCanvas.height = window.innerHeight;
-            }
-            resizeCanvas();
+            // التأكد من ملء الشاشة بالكامل بناءً على الحجم الحالي فور تشغيل الفانكشن
+            smokeCanvas.width = window.innerWidth;
+            smokeCanvas.height = window.innerHeight;
 
             const particles = [];
             let particleCount = 30;
 
             if (mode === 'glow') particleCount = 60; 
             if (mode === 'revival') particleCount = 45; 
-            if (mode === 'video-overlay') particleCount = 25; 
+            // رفع كثافة دخان الفيديو قليلاً لجعل المؤثر أوضح كـ overlay وردي
+            if (mode === 'video-overlay') particleCount = 35; 
 
             class CustomEffectParticle {
                 constructor() { this.reset(true); }
@@ -542,7 +553,7 @@
                         this.size = Math.random() * 120 + 80;
                         this.speedX = Math.random() * 0.6 + 0.2;
                         this.speedY = Math.random() * 0.3 - 0.15;
-                        this.opacity = mode === 'video-overlay' ? Math.random() * 0.12 + 0.03 : Math.random() * 0.2 + 0.05;
+                        this.opacity = mode === 'video-overlay' ? Math.random() * 0.14 + 0.05 : Math.random() * 0.2 + 0.05;
                         this.vs = Math.random() * 0.08 + 0.02;
                     } 
                     else if (mode === 'revival') {
