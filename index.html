@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pink Dental Spa - Enter the PINK world</title>
-    <link href="https://fonts.googleapis.com/css2 family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -24,19 +24,24 @@
             align-items: center;
             min-height: 100vh;
             position: relative;
-            background-color: #1a0511; /* خلفية داكنة لتبرز جمال الدخان اليرمجي */
+            background-color: #1a0511; 
             overflow: hidden;
             transition: background 1s ease, background-color 1s ease;
         }
 
-        /* حاوية الـ Three.js الشاشية للدخان */
+        /* حاوية الـ Three.js الشاشية للدخان الحقيقي المتموج */
         #threeCanvasContainer {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 1;
-            transition: opacity 1s ease-in-out;
+            transition: opacity 1.2s ease-in-out, filter 1.2s ease-in-out;
             opacity: 1;
+        }
+
+        /* تأثير التعتيم الخفيف للدخان أثناء عرض الفيديو لزيادة التركيز على الفيديو */
+        .dimmed-smoke {
+            filter: brightness(0.4) contrast(1.1);
         }
 
         .bg-slider {
@@ -69,7 +74,7 @@
             background: transparent !important;
         }
 
-        /* كانفاس إضافي منفصل وخفيف مخصص فقط لومضات السباركلز الفخمة فوق الدخان */
+        /* كانفاس ومضات النجوم والسباركلز اللامعة الفخمة فوق الدخان */
         #sparkleCanvas {
             position: absolute;
             top: 0; left: 0;
@@ -249,7 +254,7 @@
             display: none !important;
         }
 
-        /* ستايلات شاشات النتائج النهائية الملونة */
+        /* ستايلات شاشات النتائج النهائية */
         .mode-glow-bg {
             background: radial-gradient(circle, #ffc0cb 0%, #ff69b4 100%) !important;
             box-shadow: inset 0 0 80px rgba(255, 255, 255, 0.6);
@@ -316,12 +321,6 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             padding: 0 10px;
             animation: softPulse 2.5s infinite ease-in-out;
-        }
-
-        @keyframes softPulse {
-            0% { opacity: 0.85; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.01); }
-            100% { opacity: 0.85; transform: scale(1); }
         }
 
         #result-screen {
@@ -401,7 +400,7 @@
 
         const quizData = [
             { question: "كم مرة تشرب قهوة او شاي يوميا؟", options: ["ولا مرة", "مرة او مرتان", "من ثلاث الى خمس مرات", "عايش عليها"], scores: [100, 70, 35, 0], image: "bg1.png" },
-            { question: "هل تدخن؟", options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"], scores: [100, 70, 35, 0], image: "bg2.png" },
+            { question: "هل تدخن？", options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"], scores: [100, 70, 35, 0], image: "bg2.png" },
             { question: "هل تشرب ماء كافي يوميا؟", options: ["نعم", "أحياناً", "لا"], scores: [100, 50, 0], image: "bg3.png" },
             { question: "احد عرض عليك علكة او نعناع بشكل مفاجئ؟", options: ["لا", "احيانا", "مرات متكررة"], scores: [100, 50, 0], image: "bg4.png" },
             { question: "تحس بجفاف بالفم؟", options: ["نادرا", "احيانا", "دائما"], scores: [100, 50, 0], image: "bg5.png" },
@@ -434,11 +433,10 @@
         const introVideo = document.getElementById('introVideo');
         const threeContainer = document.getElementById('threeCanvasContainer');
 
-        // --- كود برمجة الـ Three.js والـ GLSL Shader لمحاكاة الدخان الفيزيائي الكثيف ---
+        // --- كود الـ Shader المتطور: يدمج فيزياء الموجات مع تفاصيل صورتك الأصلية للدخان ---
         let scene, camera, renderer, smokeMaterial, smokeMesh;
         let clock = new THREE.Clock();
 
-        // كود الـ Vertex Shader (تحديد الموضع والأبعاد البرمجية للـ Pixels)
         const vertexShaderCode = `
             varying vec2 vUv;
             void main() {
@@ -447,60 +445,34 @@
             }
         `;
 
-        // كود الـ Fragment Shader (المعادلة الرياضية العميقة لتوليد غاز الدخان المتداخل ولونه الوردي الفاخر)
         const fragmentShaderCode = `
             uniform vec2 u_resolution;
             uniform float u_time;
+            uniform sampler2D u_texture; // الصورة الأصلية الخاصة بك المرفوعة بالأسفل
             varying vec2 vUv;
 
-            // دالة رياضية لتوليد عشوائية النسيج العضوي (Noise Function)
-            float noise(in vec2 p) {
-                return sin(p.x * 2.0) * sin(p.y * 2.0) + cos(p.x * 0.5 + u_time * 0.1) * sin(p.y * 1.2 - u_time * 0.05);
-            }
-
-            // تجميع طبقات الـ Noise فوق بعضها لمحاكاة كثافة الدخان المتصاعد (Fractal Brownian Motion)
-            float fbm(in vec2 p) {
-                float v = 0.0;
-                float amt = 0.5;
-                for (int i = 0; i < 4; i++) {
-                    v += amt * noise(p);
-                    p *= 2.1;
-                    amt *= 0.5;
-                }
-                return v;
+            // دالة جيبية متقدمة لخلق تموج وتدفق غازي عشوائي يحاكي حركة الرياح والدخان
+            vec2 distort(vec2 p, float t) {
+                p.x += sin(p.y * 4.0 + t * 0.4) * 0.04;
+                p.y += cos(p.x * 3.5 + t * 0.3) * 0.03;
+                return p;
             }
 
             void main() {
-                // ضبط النسبة وعمل Slow motion وتدفق دائم من اليسار لليمن
                 vec2 st = gl_FragCoord.xy / u_resolution.xy;
-                st.x *= u_resolution.x / u_resolution.y;
                 
-                vec2 uv = st * 2.5;
-                uv.x -= u_time * 0.06; // سرعة الـ Slow mo الفخمة من اليسار لليمين
+                // تدوير وتمييع إحداثيات بكسلات الصورة بطبقتين متعاكستين للحصول على مظهر غازي كثيف
+                vec2 uv1 = distort(st, u_time);
+                vec2 uv2 = distort(st, u_time * -0.7 + 5.0);
                 
-                // حسابات التداخل الغازي للدخان
-                vec2 q = vec2(0.0);
-                q.x = fbm(uv + vec2(0.0, 0.0));
-                q.y = fbm(uv + vec2(1.0, 1.0));
-
-                vec2 r = vec2(0.0);
-                r.x = fbm(uv + 1.0 * q + vec2(1.7, 9.2) + 0.15 * u_time);
-                r.y = fbm(uv + 1.0 * q + vec2(8.3, 2.8) + 0.08 * u_time);
-
-                float f = fbm(uv + r);
+                // دمج قراءات بكسلات الصورة من الاتجاهين لتعطي تداخل الغيوم الدخانية الحقيقية وعرامها
+                vec4 texColor1 = texture2D(u_texture, uv1);
+                vec4 texColor2 = texture2D(u_texture, uv2);
                 
-                // درجات الألوان الفخمة المستوحاة من صورتك (وردي غامق، بنفسجي خفيف، وأطراف ناعمة)
-                vec3 color1 = vec3(0.85, 0.10, 0.49); // الفوشيا الملكي الدافئ
-                vec3 color2 = vec3(0.42, 0.05, 0.26); // البنفسجي المخملي الغامق
-                vec3 color3 = vec3(0.98, 0.70, 0.82); // الوردي الناعم للأطراف
-
-                vec3 finalColor = mix(color1, color2, clamp(length(q), 0.0, 1.0));
-                finalColor = mix(finalColor, color3, clamp(length(r.x), 0.0, 1.0));
+                vec4 finalSmoke = mix(texColor1, texColor2, 0.45);
                 
-                // تنعيم الكثافة وتفتيح السنتر قليلاً مثل الصورة تماماً
-                float density = clamp(f * f * 3.5 + 0.2, 0.0, 1.0);
-                
-                gl_FragColor = vec4(finalColor, density * 0.95);
+                // ضبط بريق وعمق ألوان النسيج المستخرج ليتطابق تماماً مع الصورة الفخمة
+                gl_FragColor = vec4(finalSmoke.rgb, finalSmoke.a * 0.98);
             }
         `;
 
@@ -512,10 +484,18 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             threeContainer.appendChild(renderer.domElement);
 
-            // إعداد المتغيرات الموحدة للـ Shader (الوقت ومقاسات الشاشة الحية)
+            // تحميل صورتك الفاخرة المليئة بتفاصيل الدخان الحقيقية لتكون هي نسيج الـ Shader الرئيسي
+            const textureLoader = new THREE.TextureLoader();
+            const smokeTexture = textureLoader.load('1000455138.jpg', () => {
+                // تكرار الحواف بنعومة تامة عند التموج
+                smokeTexture.wrapS = THREE.RepeatWrapping;
+                smokeTexture.wrapT = THREE.RepeatWrapping;
+            });
+
             let uniforms = {
                 u_time: { value: 1.0 },
-                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                u_texture: { value: smokeTexture }
             };
 
             smokeMaterial = new THREE.ShaderMaterial({
@@ -549,10 +529,10 @@
             sparkleCanvas.height = window.innerHeight;
         });
 
-        // تشغيل نظام الدخان ثلاثي الأبعاد المتطور فوراً
+        // تشغيل نظام دخان الـ Texture والـ Shader المتطور
         initThreeSmoke();
 
-        // تشغيل ومضات النجوم المستقلة
+        // تشغيل ومضات النجوم فوق الدخان
         function initSparkles() {
             sparkleCanvas.width = window.innerWidth;
             sparkleCanvas.height = window.innerHeight;
@@ -606,29 +586,33 @@
         }
         initSparkles();
 
-        // --- التحكم بتدفق الأسئلة وبدء تجربة المستخدم ---
+        // --- التحكم بالأحداث وبقاء الخلفية تعمل أثناء الفيديو ---
         startQuizBtn.addEventListener('click', () => {
             unlockMobileAudio();
             
-            // تلميس واختفاء الدخان المبرمجة والبريق تدريجياً ليبقى الفيديو نقياً تماماً
-            threeContainer.style.opacity = "0";
-            sparkleCanvas.style.opacity = "0"; 
+            // تعديل جوهري: الدخان والبريق يبقيان شغالين ولا يختفيان، بل نمنحهما فقط تعتيماً فخماً وخفيفاً ليركز المستخدم على الفيديو
+            threeContainer.classList.add('dimmed-smoke');
+            sparkleCanvas.style.opacity = "0.6"; 
 
             introVideo.muted = false;
             introVideo.currentTime = 0;
             introVideo.play().catch(e => {});
 
+            // إخفاء كارت الواجهة الترحيبية تدريجياً بذكاء لإبراز مساحة تشغيل الفيديو
             setTimeout(() => {
                 quizBox.classList.add('quiz-pull-out');
             }, 2500); 
         });
 
+        // اختفاء الدخان والتحول لخلفيات الأسئلة يتم *فقط* بعد انتهاء الفيديو تماماً
         introVideo.addEventListener('ended', () => {
             welcomeScreen.classList.add('hidden');
             questionScreen.classList.remove('hidden');
             overlayLayer.classList.remove('welcome-overlay');
             
+            // الآن انتهى الفيديو، نقوم بإخفاء حاوية الدخان المبرمجة لتبدأ خلفيات الأسئلة بالظهور بالترتيب
             threeContainer.classList.add('hidden'); 
+            sparkleCanvas.classList.add('hidden');
             bgLayer.style.opacity = "1";
 
             quizBox.classList.remove('quiz-pull-out');
