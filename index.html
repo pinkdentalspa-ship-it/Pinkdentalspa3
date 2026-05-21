@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pink Dental Spa - Enter the PINK world</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2 family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
     <style>
         * {
             box-sizing: border-box;
@@ -21,9 +24,19 @@
             align-items: center;
             min-height: 100vh;
             position: relative;
-            background-color: #f7f3f5; 
+            background-color: #1a0511; /* خلفية داكنة لتبرز جمال الدخان اليرمجي */
             overflow: hidden;
             transition: background 1s ease, background-color 1s ease;
+        }
+
+        /* حاوية الـ Three.js الشاشية للدخان */
+        #threeCanvasContainer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            transition: opacity 1s ease-in-out;
+            opacity: 1;
         }
 
         .bg-slider {
@@ -33,7 +46,7 @@
             background-position: center;
             background-repeat: no-repeat;
             z-index: 0;
-            opacity: 1; 
+            opacity: 0; 
             filter: blur(0px);
             transform: scale(1);
             transition: filter 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s ease;
@@ -47,8 +60,8 @@
         .overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.05); 
-            z-index: 1;
+            background: rgba(0, 0, 0, 0.02); 
+            z-index: 2;
             transition: background 1s ease;
         }
 
@@ -56,12 +69,12 @@
             background: transparent !important;
         }
 
-        #smokeCanvas {
+        /* كانفاس إضافي منفصل وخفيف مخصص فقط لومضات السباركلز الفخمة فوق الدخان */
+        #sparkleCanvas {
             position: absolute;
             top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2; 
+            width: 100%; height: 100%;
+            z-index: 3; 
             pointer-events: none; 
             opacity: 1;
             transition: opacity 0.8s ease-in-out;
@@ -69,7 +82,7 @@
 
         .quiz-container {
             position: relative;
-            z-index: 3;
+            z-index: 4;
             background: transparent; 
             border: none;
             padding: 20px;
@@ -85,8 +98,8 @@
         .card-box {
             background: #ffffff;
             border-radius: 32px;
-            padding: 35px 25px;
-            box-shadow: 0 20px 50px rgba(218, 26, 125, 0.08);
+            padding: 40px 30px;
+            box-shadow: 0 25px 60px rgba(180, 20, 100, 0.12);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -108,15 +121,15 @@
             outline: none;
             background-color: #000;
             object-fit: cover;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
 
         .main-title {
             font-family: 'Playfair Display', Georgia, serif;
-            font-size: 2.3rem;
-            color: #3a4750;
+            font-size: 2.4rem;
+            color: #2b353c;
             font-weight: 600;
-            line-height: 1.2;
+            line-height: 1.25;
             margin-bottom: 25px;
             text-shadow: none;
             direction: ltr;
@@ -126,9 +139,9 @@
             font-size: 1.05rem;
             color: #9aa4ac;
             line-height: 1.6;
-            margin-bottom: 35px;
+            margin-bottom: 40px;
             font-weight: 500;
-            max-width: 85%;
+            max-width: 90%;
             direction: ltr;
         }
 
@@ -144,12 +157,12 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(255, 0, 204, 0.2);
+            box-shadow: 0 10px 25px rgba(255, 0, 204, 0.25);
             direction: ltr;
-            width: 85%;
-            max-width: 280px;
+            width: 90%;
+            max-width: 290px;
         }
 
         .start-btn .heart-icon {
@@ -160,7 +173,7 @@
 
         .start-btn:hover, .start-btn:active {
             transform: scale(1.03);
-            box-shadow: 0 12px 30px rgba(255, 0, 204, 0.3);
+            box-shadow: 0 12px 30px rgba(255, 0, 204, 0.35);
             opacity: 0.95;
         }
 
@@ -236,7 +249,7 @@
             display: none !important;
         }
 
-        /* شاشات النتائج */
+        /* ستايلات شاشات النتائج النهائية الملونة */
         .mode-glow-bg {
             background: radial-gradient(circle, #ffc0cb 0%, #ff69b4 100%) !important;
             box-shadow: inset 0 0 80px rgba(255, 255, 255, 0.6);
@@ -323,10 +336,12 @@
 </head>
 <body>
 
+    <div id="threeCanvasContainer"></div>
+
     <div class="bg-slider" id="bg-layer"></div>
     <div class="overlay welcome-overlay" id="overlay-layer"></div>
 
-    <canvas id="smokeCanvas"></canvas>
+    <canvas id="sparkleCanvas"></canvas>
 
     <div class="quiz-container" id="quiz-box">
         
@@ -385,55 +400,22 @@
         }
 
         const quizData = [
-            {
-                question: "كم مرة تشرب قهوة او شاي يوميا؟",
-                options: ["ولا مرة", "مرة او مرتان", "من ثلاث الى خمس مرات", "عايش عليها"],
-                scores: [100, 70, 35, 0],
-                image: "bg1.png"
-            },
-            {
-                question: "هل تدخن؟",
-                options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"],
-                scores: [100, 70, 35, 0],
-                image: "bg2.png"
-            },
-            {
-                question: "هل تشرب ماء كافي يوميا؟",
-                options: ["نعم", "أحياناً", "لا"],
-                scores: [100, 50, 0],
-                image: "bg3.png"
-            },
-            {
-                question: "احد عرض عليك علكة او نعناع بشكل مفاجئ؟",
-                options: ["لا", "احيانا", "مرات متكررة"],
-                scores: [100, 50, 0],
-                image: "bg4.png"
-            },
-            {
-                question: "تحس بجفاف بالفم؟",
-                options: ["نادرا", "احيانا", "دائما"],
-                scores: [100, 50, 0],
-                image: "bg5.png"
-            },
-            {
-                question: "تحس الناس تبتعد و انت تحجي؟",
-                options: ["لا", "يمكن", "صارت اكثر من مرة"],
-                scores: [100, 50, 0],
-                image: "bg6.png"
-            }
+            { question: "كم مرة تشرب قهوة او شاي يوميا؟", options: ["ولا مرة", "مرة او مرتان", "من ثلاث الى خمس مرات", "عايش عليها"], scores: [100, 70, 35, 0], image: "bg1.png" },
+            { question: "هل تدخن؟", options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"], scores: [100, 70, 35, 0], image: "bg2.png" },
+            { question: "هل تشرب ماء كافي يوميا؟", options: ["نعم", "أحياناً", "لا"], scores: [100, 50, 0], image: "bg3.png" },
+            { question: "احد عرض عليك علكة او نعناع بشكل مفاجئ؟", options: ["لا", "احيانا", "مرات متكررة"], scores: [100, 50, 0], image: "bg4.png" },
+            { question: "تحس بجفاف بالفم؟", options: ["نادرا", "احيانا", "دائما"], scores: [100, 50, 0], image: "bg5.png" },
+            { question: "تحس الناس تبتعد و انت تحجي؟", options: ["لا", "يمكن", "صارت اكثر من مرة"], scores: [100, 50, 0], image: "bg6.png" }
         ];
 
         function preloadImages() {
-            quizData.forEach(data => {
-                const img = new Image();
-                img.src = data.image;
-            });
+            quizData.forEach(data => { const img = new Image(); img.src = data.image; });
         }
         preloadImages();
 
         let currentQuestionIndex = 0;
         let totalScore = 0;
-        let activeAnimationId = null; 
+        let sparkleAnimationId = null; 
 
         const quizBox = document.getElementById('quiz-box');
         const bgLayer = document.getElementById('bg-layer');
@@ -447,24 +429,191 @@
         const badgeContainer = document.getElementById('badge-container');
         const scoreContainer = document.getElementById('score-container');
         const descriptionContainer = document.getElementById('description-container');
-        const smokeCanvas = document.getElementById('smokeCanvas');
+        const sparkleCanvas = document.getElementById('sparkleCanvas');
         const startQuizBtn = document.getElementById('start-quiz-btn');
         const introVideo = document.getElementById('introVideo');
+        const threeContainer = document.getElementById('threeCanvasContainer');
 
-        function initCanvasDimensions() {
-            smokeCanvas.width = window.innerWidth;
-            smokeCanvas.height = window.innerHeight;
+        // --- كود برمجة الـ Three.js والـ GLSL Shader لمحاكاة الدخان الفيزيائي الكثيف ---
+        let scene, camera, renderer, smokeMaterial, smokeMesh;
+        let clock = new THREE.Clock();
+
+        // كود الـ Vertex Shader (تحديد الموضع والأبعاد البرمجية للـ Pixels)
+        const vertexShaderCode = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        // كود الـ Fragment Shader (المعادلة الرياضية العميقة لتوليد غاز الدخان المتداخل ولونه الوردي الفاخر)
+        const fragmentShaderCode = `
+            uniform vec2 u_resolution;
+            uniform float u_time;
+            varying vec2 vUv;
+
+            // دالة رياضية لتوليد عشوائية النسيج العضوي (Noise Function)
+            float noise(in vec2 p) {
+                return sin(p.x * 2.0) * sin(p.y * 2.0) + cos(p.x * 0.5 + u_time * 0.1) * sin(p.y * 1.2 - u_time * 0.05);
+            }
+
+            // تجميع طبقات الـ Noise فوق بعضها لمحاكاة كثافة الدخان المتصاعد (Fractal Brownian Motion)
+            float fbm(in vec2 p) {
+                float v = 0.0;
+                float amt = 0.5;
+                for (int i = 0; i < 4; i++) {
+                    v += amt * noise(p);
+                    p *= 2.1;
+                    amt *= 0.5;
+                }
+                return v;
+            }
+
+            void main() {
+                // ضبط النسبة وعمل Slow motion وتدفق دائم من اليسار لليمن
+                vec2 st = gl_FragCoord.xy / u_resolution.xy;
+                st.x *= u_resolution.x / u_resolution.y;
+                
+                vec2 uv = st * 2.5;
+                uv.x -= u_time * 0.06; // سرعة الـ Slow mo الفخمة من اليسار لليمين
+                
+                // حسابات التداخل الغازي للدخان
+                vec2 q = vec2(0.0);
+                q.x = fbm(uv + vec2(0.0, 0.0));
+                q.y = fbm(uv + vec2(1.0, 1.0));
+
+                vec2 r = vec2(0.0);
+                r.x = fbm(uv + 1.0 * q + vec2(1.7, 9.2) + 0.15 * u_time);
+                r.y = fbm(uv + 1.0 * q + vec2(8.3, 2.8) + 0.08 * u_time);
+
+                float f = fbm(uv + r);
+                
+                // درجات الألوان الفخمة المستوحاة من صورتك (وردي غامق، بنفسجي خفيف، وأطراف ناعمة)
+                vec3 color1 = vec3(0.85, 0.10, 0.49); // الفوشيا الملكي الدافئ
+                vec3 color2 = vec3(0.42, 0.05, 0.26); // البنفسجي المخملي الغامق
+                vec3 color3 = vec3(0.98, 0.70, 0.82); // الوردي الناعم للأطراف
+
+                vec3 finalColor = mix(color1, color2, clamp(length(q), 0.0, 1.0));
+                finalColor = mix(finalColor, color3, clamp(length(r.x), 0.0, 1.0));
+                
+                // تنعيم الكثافة وتفتيح السنتر قليلاً مثل الصورة تماماً
+                float density = clamp(f * f * 3.5 + 0.2, 0.0, 1.0);
+                
+                gl_FragColor = vec4(finalColor, density * 0.95);
+            }
+        `;
+
+        function initThreeSmoke() {
+            scene = new THREE.Scene();
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            threeContainer.appendChild(renderer.domElement);
+
+            // إعداد المتغيرات الموحدة للـ Shader (الوقت ومقاسات الشاشة الحية)
+            let uniforms = {
+                u_time: { value: 1.0 },
+                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+            };
+
+            smokeMaterial = new THREE.ShaderMaterial({
+                vertexShader: vertexShaderCode,
+                fragmentShader: fragmentShaderCode,
+                uniforms: uniforms,
+                transparent: true
+            });
+
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            smokeMesh = new THREE.Mesh(geometry, smokeMaterial);
+            scene.add(smokeMesh);
+
+            animateThreeSmoke();
         }
-        initCanvasDimensions();
-        window.addEventListener('resize', initCanvasDimensions);
 
-        // تفعيل مؤثر الدخان العضوي المتطابق مع صورتك فور التشغيل
-        initResultEffects('welcome-sparkles');
+        function animateThreeSmoke() {
+            requestAnimationFrame(animateThreeSmoke);
+            if(smokeMaterial) {
+                smokeMaterial.uniforms.u_time.value = clock.getElapsedTime();
+            }
+            renderer.render(scene, camera);
+        }
 
+        window.addEventListener('resize', () => {
+            if(renderer && smokeMaterial) {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                smokeMaterial.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+            }
+            sparkleCanvas.width = window.innerWidth;
+            sparkleCanvas.height = window.innerHeight;
+        });
+
+        // تشغيل نظام الدخان ثلاثي الأبعاد المتطور فوراً
+        initThreeSmoke();
+
+        // تشغيل ومضات النجوم المستقلة
+        function initSparkles() {
+            sparkleCanvas.width = window.innerWidth;
+            sparkleCanvas.height = window.innerHeight;
+            const ctx = sparkleCanvas.getContext('2d');
+            const particles = [];
+
+            class SparkleParticle {
+                constructor() {
+                    this.x = Math.random() * sparkleCanvas.width;
+                    this.y = Math.random() * sparkleCanvas.height;
+                    this.size = Math.random() * 2.5 + 1;
+                    this.speedX = Math.random() * 0.1 - 0.05;
+                    this.speedY = -(Math.random() * 0.15 + 0.05); 
+                    this.opacity = Math.random() * 0.6 + 0.3;
+                    this.phase = Math.random() * 100;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.y < -20) {
+                        this.y = sparkleCanvas.height + 20;
+                        this.x = Math.random() * sparkleCanvas.width;
+                    }
+                }
+                draw() {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    let pulseOpacity = this.opacity * (0.4 + Math.sin(Date.now() * 0.003 + this.phase) * 0.6);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${pulseOpacity})`;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "#ffffff";
+                    ctx.beginPath();
+                    for (let i = 0; i < 4; i++) {
+                        ctx.rotate(Math.PI / 2);
+                        ctx.lineTo(0, this.size * 4.5);
+                        ctx.lineTo(this.size * 0.9, 0);
+                    }
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            for(let i=0; i<25; i++) particles.push(new SparkleParticle());
+
+            function loop() {
+                ctx.clearRect(0, 0, sparkleCanvas.width, sparkleCanvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                sparkleAnimationId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        initSparkles();
+
+        // --- التحكم بتدفق الأسئلة وبدء تجربة المستخدم ---
         startQuizBtn.addEventListener('click', () => {
             unlockMobileAudio();
             
-            smokeCanvas.style.opacity = "0"; 
+            // تلميس واختفاء الدخان المبرمجة والبريق تدريجياً ليبقى الفيديو نقياً تماماً
+            threeContainer.style.opacity = "0";
+            sparkleCanvas.style.opacity = "0"; 
+
             introVideo.muted = false;
             introVideo.currentTime = 0;
             introVideo.play().catch(e => {});
@@ -478,6 +627,10 @@
             welcomeScreen.classList.add('hidden');
             questionScreen.classList.remove('hidden');
             overlayLayer.classList.remove('welcome-overlay');
+            
+            threeContainer.classList.add('hidden'); 
+            bgLayer.style.opacity = "1";
+
             quizBox.classList.remove('quiz-pull-out');
             quizBox.classList.add('quiz-pull-in-prepare');
             
@@ -492,7 +645,6 @@
 
         function loadQuestion() {
             const currentData = quizData[currentQuestionIndex];
-            
             quizBox.classList.remove('quiz-pull-out', 'quiz-pull-in-prepare');
             bgLayer.classList.remove('bg-blur-effect');
             
@@ -515,15 +667,11 @@
             const currentData = quizData[currentQuestionIndex];
 
             totalScore += currentData.scores[selectedIndex];
-            
             clickSound.currentTime = 0;
             clickSound.play().catch(e => {});
-
             selectedButton.classList.add('btn-selected');
 
-            allButtons.forEach(btn => {
-                if (btn !== selectedButton) btn.classList.add('disabled');
-            });
+            allButtons.forEach(btn => { if (btn !== selectedButton) btn.classList.add('disabled'); });
 
             setTimeout(() => {
                 quizBox.classList.add('quiz-pull-out');
@@ -535,7 +683,6 @@
                         quizBox.style.transition = 'none';
                         quizBox.classList.remove('quiz-pull-out');
                         quizBox.classList.add('quiz-pull-in-prepare');
-                        
                         setTimeout(() => {
                             quizBox.style.transition = '';
                             loadQuestion();
@@ -557,173 +704,6 @@
             }());
         }
 
-        function initResultEffects(mode) {
-            if (activeAnimationId) {
-                cancelAnimationFrame(activeAnimationId);
-            }
-
-            smokeCanvas.style.opacity = "1";
-            const ctx = smokeCanvas.getContext('2d');
-            
-            smokeCanvas.width = window.innerWidth;
-            smokeCanvas.height = window.innerHeight;
-
-            const particles = [];
-            let particleCount = 30;
-
-            if (mode === 'glow') particleCount = 60; 
-            if (mode === 'revival') particleCount = 45; 
-            if (mode === 'welcome-sparkles') particleCount = 25; // عدد جزيئات عملاقة متداخلة لتعطي كثافة متجانسة
-
-            class CustomEffectParticle {
-                constructor() { this.reset(true); }
-                reset(init = false) {
-                    if (mode === 'glow') {
-                        this.x = Math.random() * smokeCanvas.width;
-                        this.y = init ? Math.random() * smokeCanvas.height : smokeCanvas.height + 20;
-                        this.size = Math.random() * 3 + 1;
-                        this.speedX = Math.random() * 1.5 - 0.75;
-                        this.speedY = -(Math.random() * 2.5 + 1.5); 
-                        this.opacity = Math.random() * 0.8 + 0.2;
-                    } 
-                    else if (mode === 'balance' || mode === 'welcome-sparkles') {
-                        // الحركة تبدأ دائماً بالكامل من اليسار باتجاه اليمين وبسرعة بطيئة جداً (Slow Motion)
-                        this.x = init ? (Math.random() * (smokeCanvas.width + 400) - 200) : -300;
-                        this.y = Math.random() * (smokeCanvas.height + 100) - 50;
-                        
-                        // أحجام عملاقة لتبدو ككتل دخانية متلاحمة ومحاكية للصورة المرفقة
-                        this.sizeX = Math.random() * 250 + 200;
-                        this.sizeY = Math.random() * 180 + 150;
-                        
-                        // سرعة بطيئة انسيابية جداً (Slow Mo) من اليسار لليمين
-                        this.speedX = Math.random() * 0.15 + 0.08;
-                        this.speedY = Math.random() * 0.06 - 0.03;
-                        
-                        // درجات الشفافية لضمان تداخل فخم وعميق دون تلطيخ الواجهة
-                        this.opacity = Math.random() * 0.22 + 0.08;
-                        this.scaleVel = Math.random() * 0.02 + 0.01;
-                        this.rotation = Math.random() * Math.PI * 2;
-                        this.rotSpeed = Math.random() * 0.002 - 0.001;
-
-                        // تفعيل ميزة السباركل الومّاضة
-                        this.isSparkle = mode === 'welcome-sparkles' && Math.random() > 0.4;
-                        this.sparkleXOffset = (Math.random() - 0.5) * 120;
-                        this.sparkleYOffset = (Math.random() - 0.5) * 120;
-                        this.sparkleScale = Math.random() * 2.5 + 1;
-                    } 
-                    else if (mode === 'revival') {
-                        this.x = init ? Math.random() * smokeCanvas.width : -100;
-                        this.y = Math.random() * (smokeCanvas.height * 0.4) + (smokeCanvas.height * 0.4); 
-                        this.size = Math.random() * 200 + 150; 
-                        this.speedX = Math.random() * 0.3 + 0.1;
-                        this.speedY = Math.random() * 0.1 - 0.05;
-                        this.opacity = Math.random() * 0.35 + 0.15; 
-                        this.vs = Math.random() * 0.05 + 0.01;
-                    }
-                }
-
-                update() {
-                    if (mode === 'glow') {
-                        this.y += this.speedY;
-                        this.x += this.speedX;
-                        if (this.y < -10) this.reset();
-                    } else {
-                        this.x += this.speedX;
-                        this.y += this.speedY;
-                        if (mode === 'welcome-sparkles') {
-                            this.sizeX += this.scaleVel;
-                            this.sizeY += this.scaleVel;
-                            this.rotation += this.rotSpeed;
-                        }
-                        // إعادة التدوير عند الخروج تماماً من حافة اليمين
-                        if (this.x > smokeCanvas.width + 350) this.reset();
-                    }
-                }
-
-                draw() {
-                    ctx.save();
-                    if (mode === 'glow') {
-                        ctx.beginPath();
-                        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = "#ffffff";
-                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.shadowBlur = 0;
-                    } 
-                    else if (mode === 'welcome-sparkles') {
-                        // تطبيق الرسم بالـ Ellipse لتوليد شكل السحابة العضوية الممتدة بدلاً من الدوائر المنتظمة
-                        ctx.translate(this.x, this.y);
-                        ctx.rotate(this.rotation);
-                        
-                        // تدرج لوني ثلاثي غني بالـ Pink الفاخر والأرجواني الداكن المستوحى من صورتك
-                        let gradient = ctx.createRadialGradient(0, 0, 10, 0, 0, this.sizeX);
-                        gradient.addColorStop(0, `rgba(218, 26, 125, ${this.opacity})`);       // وردي غامق مكثف في السنتر
-                        gradient.addColorStop(0.3, `rgba(255, 105, 180, ${this.opacity * 0.75})`); // وردي متوسط
-                        gradient.addColorStop(0.6, `rgba(255, 192, 203, ${this.opacity * 0.3})`);  // وردي ناعم وضبابي بالأطراف
-                        gradient.addColorStop(1, 'rgba(255,255,255,0)');
-                        
-                        ctx.fillStyle = gradient;
-                        ctx.beginPath();
-                        ctx.ellipse(0, 0, this.sizeX, this.sizeY, 0, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        ctx.restore(); 
-
-                        // رسم جزيئات الـ Sparkle الذكية والمتحركة ببطء حول كتل الدخان
-                        if (this.isSparkle) {
-                            ctx.save();
-                            ctx.translate(this.x + this.sparkleXOffset, this.y + this.sparkleYOffset);
-                            // وميض ناعم عشوائي للبريق
-                            let currentOpacity = (this.opacity + 0.4) * (0.6 + Math.sin(Date.now() * 0.002 + this.x) * 0.4);
-                            ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`;
-                            ctx.shadowBlur = 10;
-                            ctx.shadowColor = "#ffffff";
-                            ctx.beginPath();
-                            for (let i = 0; i < 4; i++) {
-                                ctx.rotate(Math.PI / 2);
-                                ctx.lineTo(0, this.sparkleScale * 5);
-                                ctx.lineTo(this.sparkleScale * 1, 0);
-                            }
-                            ctx.fill();
-                            ctx.restore();
-                        }
-                    } 
-                    else if (mode === 'balance') {
-                        ctx.beginPath();
-                        let gradient = ctx.createRadialGradient(this.x, this.y, 5, this.x, this.y, this.sizeX);
-                        gradient.addColorStop(0, `rgba(255, 182, 193, ${this.opacity})`);
-                        gradient.addColorStop(0.6, `rgba(255, 20, 147, ${this.opacity * 0.3})`);
-                        gradient.addColorStop(1, 'rgba(255,255,255,0)');
-                        ctx.fillStyle = gradient;
-                        ctx.arc(this.x, this.y, this.sizeX, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.restore();
-                    }
-                    else if (mode === 'revival') {
-                        ctx.beginPath();
-                        let gradient = ctx.createRadialGradient(this.x, this.y, 10, this.x, this.y, this.size);
-                        gradient.addColorStop(0, `rgba(255, 20, 147, ${this.opacity})`);
-                        gradient.addColorStop(0.5, `rgba(139, 0, 139, ${this.opacity * 0.4})`);
-                        gradient.addColorStop(1, 'rgba(0,0,0,0)');
-                        ctx.fillStyle = gradient;
-                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.restore();
-                    }
-                }
-            }
-
-            for (let i = 0; i < particleCount; i++) particles.push(new CustomEffectParticle());
-
-            function animate() {
-                ctx.clearRect(0, 0, smokeCanvas.width, smokeCanvas.height);
-                particles.forEach(p => { p.update(); p.draw(); });
-                activeAnimationId = requestAnimationFrame(animate);
-            }
-            animate();
-        }
-
         function showResults() {
             questionScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
@@ -732,7 +712,6 @@
             overlayLayer.classList.add('welcome-overlay'); 
             
             let finalCalculatedScore = (totalScore / 6).toFixed(1);
-            
             let resultWord = "";
             let resultDescription = "";
             
@@ -740,20 +719,15 @@
                 document.body.classList.add('mode-glow-bg');
                 resultWord = "Pink Glow";
                 resultDescription = "Freshness, confidence, and care are clearly part of your daily whisper energy, a little care keeps it unforgettable.";
-                initResultEffects('glow');
                 triggerFastConfetti();
-                
             } else if (finalCalculatedScore >= 70.0 && finalCalculatedScore <= 91.0) {
                 document.body.classList.add('mode-balance-bg');
                 resultWord = "Pink Balance";
                 resultDescription = "small daily details may be affecting your whisper freshness and confidence more than you notice, it only needs the right touch.";
-                initResultEffects('balance');
-                
             } else if (finalCalculatedScore < 70.0) {
                 document.body.classList.add('mode-revival-bg');
                 resultWord = "Pink Revival";
                 resultDescription = "Your whisper is ready for a fresh beginning, one step could unlock your full Pink Glow.";
-                initResultEffects('revival');
             }
             
             badgeContainer.innerText = resultWord;
