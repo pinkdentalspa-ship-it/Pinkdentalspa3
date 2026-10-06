@@ -67,8 +67,8 @@
         }
 
         .dimmed-smoke {
-            filter: brightness(0.4) contrast(1.1);
-        }
+    filter: none;
+}
 
         /* =========================
            QUESTION BACKGROUND
@@ -95,19 +95,19 @@
            OVERLAY
         ========================== */
 
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+       .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 
-            background: rgba(0, 0, 0, 0.2);
+    background: transparent;
 
-            z-index: 2;
+    z-index: 2;
 
-            transition: background 1s ease;
-        }
+    transition: background 1s ease;
+}
 
         .welcome-overlay {
             background: transparent !important;
@@ -1753,107 +1753,69 @@
            NO video.ended dependency
         ===================================================== */
 
-        function continueFromWelcome() {
+      function continueFromWelcome() {
 
-            if (welcomeTransitioned)
-                return;
+    if (welcomeTransitioned)
+        return;
 
+    welcomeTransitioned = true;
 
-            welcomeTransitioned =
-                true;
+    try {
+        introVideo.pause();
+    } catch (e) {}
 
+    quizBox.classList.add("quiz-pull-out");
 
-            /*
-             * Stop video if it happens
-             * to be playing.
-             *
-             * Video is NOT required
-             * for the transition.
-             */
+    setTimeout(() => {
 
-            try {
+        welcomeScreen.classList.add("hidden");
 
-                introVideo.pause();
+        questionScreen.classList.remove("hidden");
 
-            } catch (e) {}
+        overlayLayer.classList.remove("welcome-overlay");
 
+        /*
+         * إخفاء الـ Three.js smoke
+         * حتى تظهر صور الأسئلة بإضاءتها الطبيعية
+         */
+        threeContainer.style.opacity = "0";
 
-            quizBox.classList.add(
-                "quiz-pull-out"
-            );
+        /*
+         * لا نستخدم dark filter
+         */
+        threeContainer.classList.remove("dimmed-smoke");
 
+        /*
+         * إلغاء أي overlay
+         */
+        overlayLayer.style.background = "transparent";
 
-            setTimeout(
-                () => {
+        bgLayer.style.opacity = "1";
 
-                    welcomeScreen.classList.add(
-                        "hidden"
-                    );
+        quizBox.classList.remove("quiz-pull-out");
 
+        quizBox.classList.add("quiz-pull-in-prepare");
 
-                    questionScreen.classList.remove(
-                        "hidden"
-                    );
+        try {
 
+            welcomeSound.currentTime = 0;
 
-                    overlayLayer.classList.remove(
-                        "welcome-overlay"
-                    );
+            welcomeSound
+                .play()
+                .catch(() => {});
 
+        } catch (e) {}
 
-                    threeContainer.classList.add(
-                        "dimmed-smoke"
-                    );
+        setTimeout(() => {
 
+            quizBox.style.transition = "";
 
-                    bgLayer.style.opacity =
-                        "1";
+            loadQuestion();
 
+        }, 50);
 
-                    quizBox.classList.remove(
-                        "quiz-pull-out"
-                    );
-
-
-                    quizBox.classList.add(
-                        "quiz-pull-in-prepare"
-                    );
-
-
-                    /*
-                     * Welcome sound starts
-                     * after the click.
-                     */
-
-                    try {
-
-                        welcomeSound.currentTime =
-                            0;
-
-                        welcomeSound
-                            .play()
-                            .catch(() => {});
-
-                    } catch (e) {}
-
-
-                    setTimeout(
-                        () => {
-
-                            quizBox.style.transition =
-                                "";
-
-                            loadQuestion();
-
-                        },
-                        50
-                    );
-
-                },
-                300
-            );
-
-        }
+    }, 300);
+}
 
 
         /* =====================================================
@@ -1863,39 +1825,86 @@
         ===================================================== */
 
         startQuizBtn.addEventListener(
-            "click",
-            () => {
+    "click",
+    () => {
 
-                if (quizStarted)
-                    return;
+        if (quizStarted)
+            return;
 
+        quizStarted = true;
 
-                quizStarted =
-                    true;
+        unlockMobileAudio();
 
+        /*
+         * نبدأ الفيديو مباشرة من ضغطة المستخدم.
+         * هذا مهم للموبايل لأن الضغط يعتبر user interaction.
+         */
 
-                /*
-                 * Unlock sounds from
-                 * the user's interaction.
-                 */
+        try {
 
-                unlockMobileAudio();
+            introVideo.currentTime = 0;
 
+            const playPromise =
+                introVideo.play();
 
-                /*
-                 * Direct transition.
-                 *
-                 * We DO NOT call:
-                 * introVideo.play()
-                 *
-                 * We DO NOT wait for:
-                 * introVideo.ended
-                 */
+            if (
+                playPromise &&
+                typeof playPromise.catch === "function"
+            ) {
 
-                continueFromWelcome();
+                playPromise.catch(() => {
+
+                    /*
+                     * إذا المتصفح رفض تشغيل الفيديو،
+                     * لا نخلي التجربة تعلق.
+                     */
+
+                    setTimeout(() => {
+
+                        if (!welcomeTransitioned) {
+                            continueFromWelcome();
+                        }
+
+                    }, 1500);
+
+                });
 
             }
-        );
+
+        } catch (error) {
+
+            setTimeout(() => {
+
+                if (!welcomeTransitioned) {
+                    continueFromWelcome();
+                }
+
+            }, 1500);
+
+        }
+
+    }
+);
+        introVideo.addEventListener(
+    "ended",
+    () => {
+
+        if (!welcomeTransitioned) {
+            continueFromWelcome();
+        }
+
+    }
+);
+        introVideo.addEventListener(
+    "error",
+    () => {
+
+        if (!welcomeTransitioned) {
+            continueFromWelcome();
+        }
+
+    }
+);
 
 
         /* =====================================================
