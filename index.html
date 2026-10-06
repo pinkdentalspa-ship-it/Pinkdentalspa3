@@ -1,21 +1,34 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Pink Dental Spa - Enter the PINK world</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
+
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
+
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
         }
 
         body {
@@ -24,49 +37,75 @@
             align-items: center;
             min-height: 100vh;
             position: relative;
-            background-color: #1a0511; 
-            overflow: hidden;
-            transition: background 1s ease, background-color 1s ease;
+            background-color: #1a0511;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 10px 0;
+            transition:
+                background-image 0.8s ease,
+                background-color 0.8s ease;
         }
 
-        /* حاوية الـ Three.js الشاشية للدخان الحقيقي المتموج */
+        /* =========================
+           THREE.JS BACKGROUND
+        ========================== */
+
         #threeCanvasContainer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
-            transition: opacity 1.2s ease-in-out, filter 1.2s ease-in-out;
+            transition:
+                opacity 1.2s ease-in-out,
+                filter 1.2s ease-in-out;
             opacity: 1;
         }
 
-        /* تأثير التعتيم الخفيف للدخان أثناء عرض الفيديو لزيادة التركيز على الفيديو */
         .dimmed-smoke {
             filter: brightness(0.4) contrast(1.1);
         }
 
+        /* =========================
+           QUESTION BACKGROUND
+        ========================== */
+
         .bg-slider {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+
             z-index: 0;
-            opacity: 0; 
-            filter: blur(0px);
-            transform: scale(1);
-            transition: filter 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s ease;
+            opacity: 0;
+
+            transition: opacity 0.6s ease-in-out;
         }
 
-        .bg-blur-effect {
-            filter: blur(4px);
-            transform: scale(1.03);
-        }
+        /* =========================
+           OVERLAY
+        ========================== */
 
         .overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.02); 
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+
+            background: rgba(0, 0, 0, 0.2);
+
             z-index: 2;
+
             transition: background 1s ease;
         }
 
@@ -74,40 +113,77 @@
             background: transparent !important;
         }
 
-        /* كانفاس ومضات النجوم والسباركلز اللامعة الفخمة فوق الدخان */
+        /* =========================
+           SPARKLES & PARTICLES
+        ========================== */
+
+        #sparkleCanvas,
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            pointer-events: none;
+        }
+
         #sparkleCanvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 3; 
-            pointer-events: none; 
+            z-index: 3;
             opacity: 1;
+
             transition: opacity 0.8s ease-in-out;
         }
+
+        #particleCanvas {
+            z-index: 5;
+        }
+
+        /* =========================
+           MAIN CONTAINER
+        ========================== */
 
         .quiz-container {
             position: relative;
             z-index: 4;
-            background: transparent; 
+
+            background: transparent;
             border: none;
-            padding: 20px;
-            width: 90%;
-            max-width: 480px;
-            box-shadow: none;
+
+            padding: 10px;
+
+            width: 95%;
+            max-width: 420px;
+
             text-align: center;
+
             transform: scale(1);
             opacity: 1;
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-in-out;
+
+            transition:
+                opacity 0.4s ease-in-out,
+                transform 0.4s ease-in-out;
         }
+
+        /* =========================
+           WELCOME CARD
+        ========================== */
 
         .card-box {
             background: #ffffff;
+
             border-radius: 32px;
-            padding: 40px 30px;
-            box-shadow: 0 25px 60px rgba(180, 20, 100, 0.12);
+
+            padding: 35px 25px;
+
+            box-shadow:
+                0 25px 60px rgba(180, 20, 100, 0.12);
+
             display: flex;
             flex-direction: column;
             align-items: center;
+
             width: 100%;
         }
 
@@ -115,609 +191,2337 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+
             width: 100%;
         }
 
         .welcome-video {
             width: 100%;
             max-width: 380px;
+
             border-radius: 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+
+            box-shadow:
+                0 8px 25px rgba(0, 0, 0, 0.06);
+
             outline: none;
+
             background-color: #000;
+
             object-fit: cover;
-            margin-bottom: 35px;
+
+            margin-bottom: 25px;
         }
 
         .main-title {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 2.4rem;
+            font-size: 1.8rem;
+
             color: #2b353c;
-            font-weight: 600;
-            line-height: 1.25;
-            margin-bottom: 25px;
-            text-shadow: none;
-            direction: ltr;
+
+            font-weight: 700;
+
+            line-height: 1.4;
+
+            margin-bottom: 15px;
+
+            direction: rtl;
         }
 
         .sub-title {
-            font-size: 1.05rem;
-            color: #9aa4ac;
+            font-size: 0.95rem;
+
+            color: #8c969e;
+
             line-height: 1.6;
-            margin-bottom: 40px;
+
+            margin-bottom: 30px;
+
             font-weight: 500;
-            max-width: 90%;
-            direction: ltr;
+
+            max-width: 95%;
+
+            direction: rtl;
         }
+
+        /* =========================
+           START BUTTON
+        ========================== */
 
         .start-btn {
-            background: linear-gradient(to left, #ff00cc, #ffc0cb);
+            background:
+                linear-gradient(
+                    to left,
+                    #ff00cc,
+                    #ffc0cb
+                );
+
             border: none;
-            padding: 16px 45px;
-            border-radius: 20px;
-            color: #ffffff; 
-            font-size: 1.15rem;
+
+            padding: 14px 40px;
+
+            border-radius: 18px;
+
+            color: #ffffff;
+
+            font-size: 1.1rem;
+
             font-weight: 600;
+
             cursor: pointer;
+
             display: inline-flex;
+
             align-items: center;
+
             justify-content: center;
+
             gap: 12px;
+
             transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(255, 0, 204, 0.25);
-            direction: ltr;
+
+            box-shadow:
+                0 10px 25px rgba(255, 0, 204, 0.25);
+
+            direction: rtl;
+
             width: 90%;
-            max-width: 290px;
+
+            max-width: 280px;
+
+            touch-action: manipulation;
         }
 
-        .start-btn .heart-icon {
-            font-size: 1.1rem;
-            display: inline-block;
-            line-height: 1;
+        .start-btn:hover,
+        .start-btn:active {
+            transform: scale(1.02);
+
+            box-shadow:
+                0 12px 30px rgba(255, 0, 204, 0.35);
         }
 
-        .start-btn:hover, .start-btn:active {
-            transform: scale(1.03);
-            box-shadow: 0 12px 30px rgba(255, 0, 204, 0.35);
-            opacity: 0.95;
-        }
-
-        .option-btn {
-            position: relative;
-            z-index: 100;
-            background: rgba(255, 20, 147, 0.18); 
-            border: 1px solid rgba(255, 20, 147, 0.4); 
-            padding: 20px 24px;
-            border-radius: 20px;
-            color: #ffffff; 
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            text-align: right;
-            width: 100%;
+        .start-btn:focus {
             outline: none;
         }
 
-        .option-btn:hover, .option-btn:active {
-            background: rgba(255, 20, 147, 0.45); 
-            border-color: rgba(255, 20, 147, 0.8);
+        /* =========================
+           QUESTION STYLES
+        ========================== */
+
+        .option-btn {
+            position: relative;
+
+            z-index: 100;
+
+            background:
+                rgba(255, 20, 147, 0.25);
+
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+
+            border:
+                1px solid rgba(255, 20, 147, 0.5);
+
+            padding: 16px 20px;
+
+            border-radius: 18px;
+
             color: #ffffff;
-            transform: scale(1.02);
-            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.25);
+
+            text-shadow:
+                0 1px 4px rgba(0, 0, 0, 0.6);
+
+            cursor: pointer;
+
+            font-size: 1rem;
+
+            font-weight: 600;
+
+            transition: all 0.3s ease;
+
+            text-align: right;
+
+            width: 100%;
+
+            outline: none;
+
+            margin-bottom: 12px;
+
+            touch-action: manipulation;
         }
 
+        .option-btn:hover,
+        .option-btn:active {
+            background:
+                rgba(255, 20, 147, 0.55);
+
+            border-color:
+                rgba(255, 20, 147, 0.9);
+        }
+
+        .option-btn:focus {
+            outline: none;
+        }
+
+        /* =========================
+           TRANSITIONS
+        ========================== */
+
         .quiz-pull-out {
-            transform: scale(0.92);
             opacity: 0;
+
+            transform:
+                translateY(-12px)
+                scale(0.98);
         }
 
         .quiz-pull-in-prepare {
-            transform: scale(1.08);
             opacity: 0;
+
+            transform:
+                translateY(12px)
+                scale(0.98);
+
             transition: none;
         }
 
         h2 {
-            margin-bottom: 40px;
-            font-size: 1.5rem;
+            margin-bottom: 25px;
+
+            font-size: 1.3rem;
+
             line-height: 1.6;
+
             font-weight: 700;
+
             color: #ffffff;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.9);
+
+            text-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.8);
         }
 
         .options-list {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
 
-        @keyframes glassSelected {
-            0% { background: rgba(255, 20, 147, 0.45); color: #ffffff;}
-            100% { background: #ff1493; border-color: #ff1493; color: #ffffff; text-shadow: none; transform: scale(1.04); box-shadow: 0 10px 25px rgba(255, 20, 147, 0.35);}
+            flex-direction: column;
+
+            gap: 4px;
         }
 
         .btn-selected {
-            animation: glassSelected 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            background:
+                #ff1493 !important;
+
+            border-color:
+                #ff1493 !important;
+
+            color:
+                #ffffff !important;
+
             pointer-events: none;
         }
 
         .disabled {
             pointer-events: none;
-            opacity: 0.15;
-            transform: scale(0.96);
+
+            opacity: 0.2;
         }
 
         .hidden {
             display: none !important;
         }
 
-        /* ستايلات شاشات النتائج النهائية */
-        .mode-glow-bg {
-            background: radial-gradient(circle, #ffc0cb 0%, #ff69b4 100%) !important;
-            box-shadow: inset 0 0 80px rgba(255, 255, 255, 0.6);
-        }
+        /* =========================
+           RESULT SCREEN
+        ========================== */
 
-        .mode-balance-bg {
-            background: linear-gradient(135deg, #2c1a24 0%, #ff69b4 100%) !important;
-        }
+        #result-screen {
+            background:
+                rgba(255, 255, 255, 0.18);
 
-        .mode-revival-bg {
-            background: radial-gradient(circle, #1a0813 0%, #4a1535 100%) !important;
-            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
-        }
+            backdrop-filter:
+                blur(25px);
 
-        .mode-glow-bg #bg-layer, .mode-balance-bg #bg-layer, .mode-revival-bg #bg-layer {
-            display: none !important;
+            -webkit-backdrop-filter:
+                blur(25px);
+
+            border-radius:
+                30px;
+
+            padding:
+                22px 16px;
+
+            width: 100%;
+
+            border:
+                1px solid rgba(255, 255, 255, 0.25);
+
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.25);
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
         }
 
         .result-intro {
-            font-size: 1.3rem;
+            font-size: 0.9rem;
+
             font-weight: 700;
-            color: #ff1493;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+
+            color: #ff66a3;
+
+            margin-bottom: 4px;
         }
 
         .result-badge {
-            font-size: 3.4rem;
-            font-weight: 900;
+            font-size: 2.3rem;
+
+            font-weight: 800;
+
             color: #ffffff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.25);
-            margin-bottom: 5px;
+
+            margin-bottom: 2px;
         }
 
         .result-score {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
+
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 25px;
+
+            color: #ffffff;
+
+            margin-bottom: 10px;
         }
 
         .result-description {
-            font-size: 1.05rem;
-            font-weight: 500;
-            color: #ffffff;
-            line-height: 1.6;
-            padding: 0 15px;
-            margin-bottom: 35px;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.15);
-            direction: ltr; 
-            text-align: center;
-        }
+            font-size: 0.95rem;
 
-        .result-cta-text {
-            font-size: 1.1rem;
             font-weight: 600;
+
             color: #ffffff;
+
             line-height: 1.5;
-            direction: ltr;
+
+            margin-bottom: 20px;
+
             text-align: center;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            padding: 0 10px;
-            animation: softPulse 2.5s infinite ease-in-out;
         }
 
-        #result-screen {
-            animation: fadeInResult 0.8s cubic-bezier(0.215, 0.610, 0.355, 1) forwards;
+        /* =========================
+           CODE BOX
+        ========================== */
+
+        .premium-code-box {
+            background:
+                rgba(255, 255, 255, 0.15);
+
+            border:
+                2px dashed rgba(255, 102, 163, 0.6);
+
+            padding:
+                8px 12px;
+
+            border-radius:
+                12px;
+
+            color:
+                #ffffff;
+
+            font-size:
+                0.95rem;
+
+            font-weight:
+                700;
+
+            margin-bottom:
+                15px;
+
+            cursor:
+                pointer;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            gap:
+                8px;
+
+            width:
+                100%;
+
+            max-width:
+                290px;
+
+            user-select:
+                none;
         }
 
-        @keyframes fadeInResult {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* =========================
+           WHATSAPP
+        ========================== */
+
+        .whatsapp-btn {
+            background:
+                #25D366;
+
+            border:
+                none;
+
+            padding:
+                12px 20px;
+
+            border-radius:
+                16px;
+
+            color:
+                #ffffff;
+
+            font-size:
+                1.1rem;
+
+            font-weight:
+                700;
+
+            text-decoration:
+                none;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            gap:
+                8px;
+
+            width:
+                100%;
+
+            max-width:
+                290px;
+
+            box-shadow:
+                0 6px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .whatsapp-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* =========================
+           MOBILE
+        ========================== */
+
+        @media (max-width: 480px) {
+
+            .quiz-container {
+                width: 94%;
+            }
+
+            .card-box {
+                padding:
+                    28px 20px;
+            }
+
+            .main-title {
+                font-size:
+                    1.55rem;
+            }
+
+            .result-badge {
+                font-size:
+                    1.9rem;
+            }
+
+            .welcome-video {
+                max-width:
+                    100%;
+            }
         }
     </style>
 </head>
+
 <body>
 
+    <!-- THREE.JS -->
     <div id="threeCanvasContainer"></div>
 
-    <div class="bg-slider" id="bg-layer"></div>
-    <div class="overlay welcome-overlay" id="overlay-layer"></div>
-
-    <canvas id="sparkleCanvas"></canvas>
-
-    <div class="quiz-container" id="quiz-box">
-        
-        <div id="welcome-screen" class="welcome-screen">
-            <div class="card-box">
-                <video class="welcome-video" id="introVideo" playsinline>
-                    <source src="intro.mp4" type="video/mp4">
-                    متصفحك لا يدعم تشغيل الفيديو.
-                </video>
-                <div class="main-title">Enter the PINK<br>world</div>
-                <div class="sub-title">Not everything needs to be said loud...Some things are only Whispered</div>
-                <button class="start-btn" id="start-quiz-btn">
-                    <span>Pink Whisper</span>
-                    <span class="heart-icon">🤍</span>
-                </button>
-            </div>
-        </div>
-
-        <div id="question-screen" class="hidden">
-            <h2 id="question-text">جاري تحضير تجربة الـ Spa...</h2>
-            <div class="options-list" id="options-container"></div>
-        </div>
-
-        <div id="result-screen" class="hidden">
-            <div class="result-intro">Your Whisper result is:</div>
-            <div id="badge-container" class="result-badge"></div>
-            <div id="score-container" class="result-score"></div>
-            <div id="description-container" class="result-description"></div>
-            <div class="result-cta-text">
-                Send us your Whisper result (a screenshot)<br>and unlock your Pink Spa experience 💗
-            </div>
-        </div>
+    <!-- QUESTION BACKGROUND -->
+    <div
+        class="bg-slider"
+        id="bg-layer">
     </div>
 
+    <!-- OVERLAY -->
+    <div
+        class="overlay welcome-overlay"
+        id="overlay-layer">
+    </div>
+
+    <!-- EFFECTS -->
+    <canvas id="sparkleCanvas"></canvas>
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- MAIN -->
+    <div
+        class="quiz-container"
+        id="quiz-box">
+
+        <!-- =========================
+             WELCOME
+        ========================== -->
+
+        <div
+            id="welcome-screen"
+            class="welcome-screen">
+
+            <div class="card-box">
+
+                <video
+                    class="welcome-video"
+                    id="introVideo"
+                    playsinline
+                    preload="auto">
+
+                    <source
+                        src="intro.mp4"
+                        type="video/mp4">
+
+                    متصفحك لا يدعم تشغيل الفيديو.
+
+                </video>
+
+                <div class="main-title">
+                    مرحباً بك في عالم PINK
+                </div>
+
+                <div class="sub-title">
+                    تبدأ التفاصيل بهمسة خفيفة، هادئة و ناعمة
+                </div>
+
+                <button
+                    class="start-btn"
+                    id="start-quiz-btn"
+                    type="button">
+
+                    <span>
+                        Pink Whisper
+                    </span>
+
+                    <span class="heart-icon">
+                        🤍
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             QUESTIONS
+        ========================== -->
+
+        <div
+            id="question-screen"
+            class="hidden">
+
+            <h2 id="question-text">
+                جاري تحضير تجربة الـ Spa...
+            </h2>
+
+            <div
+                class="options-list"
+                id="options-container">
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             RESULT
+        ========================== -->
+
+        <div
+            id="result-screen"
+            class="hidden">
+
+            <div class="result-intro">
+                Your Whisper Result
+            </div>
+
+            <div
+                id="badge-container"
+                class="result-badge">
+            </div>
+
+            <div
+                id="score-container"
+                class="result-score">
+            </div>
+
+            <div
+                id="description-container"
+                class="result-description">
+            </div>
+
+            <div
+                class="premium-code-box"
+                id="premium-code-box">
+
+                <span id="code-text-placeholder">
+                    PW-XXXXXX
+                </span>
+
+                <span
+                    style="
+                        font-size:0.7rem;
+                        background:#ff66a3;
+                        color:#fff;
+                        padding:2px 6px;
+                        border-radius:5px;
+                    ">
+
+                    اضغط للنسخ
+
+                </span>
+
+            </div>
+
+            <a
+                href="#"
+                target="_blank"
+                rel="noopener"
+                class="whatsapp-btn"
+                id="whatsapp-redirect-btn">
+
+                Pink Whisper
+
+            </a>
+
+        </div>
+
+    </div>
+
+
     <script>
-        const clickSound = new Audio('click.mp3');
+
+        /* =====================================================
+           SETTINGS
+        ===================================================== */
+
+        const GOOGLE_SCRIPT_URL =
+            "https://script.google.com/macros/s/AKfycbz9O2Mwbo00G0Ykxfdd3ydgUzVoBxgAS-M7DeTe13unaeOKY_0cJyxZbwkVaDD7VuEd/exec";
+
+        const WHATSAPP_PHONE_NUMBER =
+            "9647777900545";
+
+
+        /* =====================================================
+           DOM
+        ===================================================== */
+
+        const threeContainer =
+            document.getElementById("threeCanvasContainer");
+
+        const bgLayer =
+            document.getElementById("bg-layer");
+
+        const overlayLayer =
+            document.getElementById("overlay-layer");
+
+        const sparkleCanvas =
+            document.getElementById("sparkleCanvas");
+
+        const particleCanvas =
+            document.getElementById("particleCanvas");
+
+        const quizBox =
+            document.getElementById("quiz-box");
+
+        const welcomeScreen =
+            document.getElementById("welcome-screen");
+
+        const questionScreen =
+            document.getElementById("question-screen");
+
+        const resultScreen =
+            document.getElementById("result-screen");
+
+        const questionText =
+            document.getElementById("question-text");
+
+        const optionsContainer =
+            document.getElementById("options-container");
+
+        const startQuizBtn =
+            document.getElementById("start-quiz-btn");
+
+        const introVideo =
+            document.getElementById("introVideo");
+
+        const badgeContainer =
+            document.getElementById("badge-container");
+
+        const scoreContainer =
+            document.getElementById("score-container");
+
+        const descriptionContainer =
+            document.getElementById("description-container");
+
+        const codeTextPlaceholder =
+            document.getElementById("code-text-placeholder");
+
+        const premiumCodeBox =
+            document.getElementById("premium-code-box");
+
+        const whatsappRedirectBtn =
+            document.getElementById("whatsapp-redirect-btn");
+
+
+        /* =====================================================
+           AUDIO
+        ===================================================== */
+
+        const clickSound =
+            new Audio("click.mp3");
+
         clickSound.volume = 0.5;
 
-        const welcomeSound = new Audio('welcome.mp3');
-        welcomeSound.volume = 0.7; 
+        const welcomeSound =
+            new Audio("welcome.mp3");
+
+        welcomeSound.volume = 0.7;
 
         let isAudioUnlocked = false;
 
+
         function unlockMobileAudio() {
+
             if (isAudioUnlocked) return;
+
             [clickSound, welcomeSound].forEach(sound => {
-                const playPromise = sound.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        sound.pause();
-                        sound.currentTime = 0;
-                    }).catch(err => {});
-                }
+
+                try {
+
+                    const promise =
+                        sound.play();
+
+                    if (promise) {
+
+                        promise
+                            .then(() => {
+
+                                sound.pause();
+                                sound.currentTime = 0;
+
+                            })
+                            .catch(() => {});
+
+                    }
+
+                } catch (e) {}
+
             });
+
             isAudioUnlocked = true;
         }
 
+
+        /* =====================================================
+           QUIZ DATA
+        ===================================================== */
+
         const quizData = [
-            { question: "كم مرة تشرب قهوة او شاي يوميا؟", options: ["ولا مرة", "مرة او مرتان", "من ثلاث الى خمس مرات", "عايش عليها"], scores: [100, 70, 35, 0], image: "bg1.png" },
-            { question: "هل تدخن？", options: ["لا", "احيانا", "يوميا", "عدة باكيتات باليوم"], scores: [100, 70, 35, 0], image: "bg2.png" },
-            { question: "هل تشرب ماء كافي يوميا؟", options: ["نعم", "أحياناً", "لا"], scores: [100, 50, 0], image: "bg3.png" },
-            { question: "احد عرض عليك علكة او نعناع بشكل مفاجئ؟", options: ["لا", "احيانا", "مرات متكررة"], scores: [100, 50, 0], image: "bg4.png" },
-            { question: "تحس بجفاف بالفم؟", options: ["نادرا", "احيانا", "دائما"], scores: [100, 50, 0], image: "bg5.png" },
-            { question: "تحس الناس تبتعد و انت تحجي؟", options: ["لا", "يمكن", "صارت اكثر من مرة"], scores: [100, 50, 0], image: "bg6.png" }
+
+            {
+                id: "q1",
+
+                question:
+                    "كم مرة تشرب قهوة او شاي يوميا؟",
+
+                options: [
+                    "ولا مرة",
+                    "مرة او مرتان",
+                    "من ثلاث الى خمس مرات",
+                    "عايش عليها"
+                ],
+
+                scores: [
+                    100,
+                    70,
+                    35,
+                    0
+                ],
+
+                image: "bg1.png"
+            },
+
+
+            {
+                id: "q2",
+
+                question:
+                    "هل تدخن؟",
+
+                options: [
+                    "لا",
+                    "احيانا",
+                    "يوميا",
+                    "عدة باكيتات باليوم"
+                ],
+
+                scores: [
+                    100,
+                    70,
+                    35,
+                    0
+                ],
+
+                image: "bg2.png"
+            },
+
+
+            {
+                id: "q3",
+
+                question:
+                    "هل تشرب ماء كافي يوميا؟",
+
+                options: [
+                    "نعم",
+                    "أحياناً",
+                    "لا"
+                ],
+
+                scores: [
+                    100,
+                    50,
+                    0
+                ],
+
+                image: "bg3.png"
+            },
+
+
+            {
+                id: "q4",
+
+                question:
+                    "احد عرض عليك علكة او نعناع بشكل مفاجئ؟",
+
+                options: [
+                    "لا",
+                    "احيانا",
+                    "مرات متكررة"
+                ],
+
+                scores: [
+                    100,
+                    50,
+                    0
+                ],
+
+                image: "bg4.png"
+            },
+
+
+            {
+                id: "q5",
+
+                question:
+                    "تحس بجفاف بالفم؟",
+
+                options: [
+                    "نادرا",
+                    "احيانا",
+                    "دائما"
+                ],
+
+                scores: [
+                    100,
+                    50,
+                    0
+                ],
+
+                image: "bg5.png"
+            },
+
+
+            {
+                id: "q6",
+
+                question:
+                    "تحس الناس تبتعد و انت تحجي؟",
+
+                options: [
+                    "لا",
+                    "يمكن",
+                    "صارت اكثر من مرة"
+                ],
+
+                scores: [
+                    100,
+                    50,
+                    0
+                ],
+
+                image: "bg6.png"
+            }
+
         ];
 
+
+        /* =====================================================
+           PRELOAD BACKGROUNDS
+        ===================================================== */
+
         function preloadImages() {
-            quizData.forEach(data => { const img = new Image(); img.src = data.image; });
+
+            quizData.forEach(data => {
+
+                const img =
+                    new Image();
+
+                img.src =
+                    data.image;
+
+            });
+
         }
+
         preloadImages();
 
+
+        /* =====================================================
+           QUIZ STATE
+        ===================================================== */
+
         let currentQuestionIndex = 0;
+
         let totalScore = 0;
-        let sparkleAnimationId = null; 
 
-        const quizBox = document.getElementById('quiz-box');
-        const bgLayer = document.getElementById('bg-layer');
-        const overlayLayer = document.getElementById('overlay-layer');
-        const questionText = document.getElementById('question-text');
-        const optionsContainer = document.getElementById('options-container');
-        
-        const welcomeScreen = document.getElementById('welcome-screen');
-        const questionScreen = document.getElementById('question-screen');
-        const resultScreen = document.getElementById('result-screen');
-        const badgeContainer = document.getElementById('badge-container');
-        const scoreContainer = document.getElementById('score-container');
-        const descriptionContainer = document.getElementById('description-container');
-        const sparkleCanvas = document.getElementById('sparkleCanvas');
-        const startQuizBtn = document.getElementById('start-quiz-btn');
-        const introVideo = document.getElementById('introVideo');
-        const threeContainer = document.getElementById('threeCanvasContainer');
+        let isAnswering = false;
 
-        // --- كود الـ Shader المتطور: يدمج فيزياء الموجات مع تفاصيل صورتك الأصلية للدخان ---
-        let scene, camera, renderer, smokeMaterial, smokeMesh;
-        let clock = new THREE.Clock();
+        let quizStarted = false;
 
-        const vertexShaderCode = `
-            varying vec2 vUv;
-            void main() {
-                vUv = uv;
-                gl_Position = vec4(position, 1.0);
+        let quizFinished = false;
+
+        let welcomeTransitioned = false;
+
+        let userResponsesPayload = {};
+
+        let finalGeneratedCode = "";
+
+
+        /* =====================================================
+           PARTICLE SYSTEM
+        ===================================================== */
+
+        const particleSystem = {
+
+            canvas:
+                particleCanvas,
+
+            ctx:
+                null,
+
+            particles:
+                [],
+
+
+            init() {
+
+                this.canvas.width =
+                    window.innerWidth;
+
+                this.canvas.height =
+                    window.innerHeight;
+
+                this.ctx =
+                    this.canvas.getContext("2d");
+
+            },
+
+
+            burstParticles(
+                x,
+                y,
+                count = 30
+            ) {
+
+                for (
+                    let i = 0;
+                    i < count;
+                    i++
+                ) {
+
+                    const angle =
+                        (Math.PI * 2 * i) /
+                        count;
+
+                    const velocity =
+                        3 +
+                        Math.random() * 3;
+
+                    this.particles.push({
+
+                        x: x,
+
+                        y: y,
+
+                        vx:
+                            Math.cos(angle) *
+                            velocity,
+
+                        vy:
+                            Math.sin(angle) *
+                            velocity,
+
+                        life: 1,
+
+                        size:
+                            3 +
+                            Math.random() * 3,
+
+                        color:
+                            `hsl(${
+                                320 +
+                                Math.random() * 40
+                            }, 100%, 70%)`
+
+                    });
+
+                }
+
+            },
+
+
+            update() {
+
+                if (!this.ctx) return;
+
+                this.ctx.clearRect(
+                    0,
+                    0,
+                    this.canvas.width,
+                    this.canvas.height
+                );
+
+
+                for (
+                    let i =
+                        this.particles.length - 1;
+
+                    i >= 0;
+
+                    i--
+                ) {
+
+                    const p =
+                        this.particles[i];
+
+                    p.x += p.vx;
+
+                    p.y += p.vy;
+
+                    p.vy += 0.15;
+
+                    p.life -= 0.02;
+
+
+                    if (p.life <= 0) {
+
+                        this.particles.splice(
+                            i,
+                            1
+                        );
+
+                        continue;
+                    }
+
+
+                    this.ctx.save();
+
+                    this.ctx.globalAlpha =
+                        p.life;
+
+                    this.ctx.fillStyle =
+                        p.color;
+
+                    this.ctx.beginPath();
+
+                    this.ctx.arc(
+                        p.x,
+                        p.y,
+                        p.size,
+                        0,
+                        Math.PI * 2
+                    );
+
+                    this.ctx.fill();
+
+                    this.ctx.restore();
+
+                }
+
+            },
+
+
+            animate() {
+
+                this.update();
+
+                requestAnimationFrame(
+                    () =>
+                        this.animate()
+                );
+
             }
-        `;
 
-        const fragmentShaderCode = `
-            uniform vec2 u_resolution;
-            uniform float u_time;
-            uniform sampler2D u_texture; // الصورة الأصلية الخاصة بك المرفوعة بالأسفل
-            varying vec2 vUv;
+        };
 
-            // دالة جيبية متقدمة لخلق تموج وتدفق غازي عشوائي يحاكي حركة الرياح والدخان
-            vec2 distort(vec2 p, float t) {
-                p.x += sin(p.y * 4.0 + t * 0.4) * 0.04;
-                p.y += cos(p.x * 3.5 + t * 0.3) * 0.03;
-                return p;
-            }
 
-            void main() {
-                vec2 st = gl_FragCoord.xy / u_resolution.xy;
-                
-                // تدوير وتمييع إحداثيات بكسلات الصورة بطبقتين متعاكستين للحصول على مظهر غازي كثيف
-                vec2 uv1 = distort(st, u_time);
-                vec2 uv2 = distort(st, u_time * -0.7 + 5.0);
-                
-                // دمج قراءات بكسلات الصورة من الاتجاهين لتعطي تداخل الغيوم الدخانية الحقيقية وعرامها
-                vec4 texColor1 = texture2D(u_texture, uv1);
-                vec4 texColor2 = texture2D(u_texture, uv2);
-                
-                vec4 finalSmoke = mix(texColor1, texColor2, 0.45);
-                
-                // ضبط بريق وعمق ألوان النسيج المستخرج ليتطابق تماماً مع الصورة الفخمة
-                gl_FragColor = vec4(finalSmoke.rgb, finalSmoke.a * 0.98);
-            }
-        `;
+        particleSystem.init();
+
+        particleSystem.animate();
+
+
+        /* =====================================================
+           THREE.JS SMOKE
+        ===================================================== */
+
+        let renderer,
+            scene,
+            camera,
+            smokeMaterial,
+            clock;
+
 
         function initThreeSmoke() {
-            scene = new THREE.Scene();
-            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-            
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            threeContainer.appendChild(renderer.domElement);
 
-            // تحميل صورتك الفاخرة المليئة بتفاصيل الدخان الحقيقية لتكون هي نسيج الـ Shader الرئيسي
-            const textureLoader = new THREE.TextureLoader();
-            const smokeTexture = textureLoader.load('1000455138.jpg', () => {
-                // تكرار الحواف بنعومة تامة عند التموج
-                smokeTexture.wrapS = THREE.RepeatWrapping;
-                smokeTexture.wrapT = THREE.RepeatWrapping;
-            });
+            if (
+                typeof THREE ===
+                "undefined"
+            ) {
+                return;
+            }
 
-            let uniforms = {
-                u_time: { value: 1.0 },
-                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                u_texture: { value: smokeTexture }
-            };
 
-            smokeMaterial = new THREE.ShaderMaterial({
-                vertexShader: vertexShaderCode,
-                fragmentShader: fragmentShaderCode,
-                uniforms: uniforms,
-                transparent: true
-            });
+            try {
 
-            const geometry = new THREE.PlaneGeometry(2, 2);
-            smokeMesh = new THREE.Mesh(geometry, smokeMaterial);
-            scene.add(smokeMesh);
+                scene =
+                    new THREE.Scene();
 
-            animateThreeSmoke();
+
+                camera =
+                    new THREE.Camera();
+
+
+                renderer =
+                    new THREE.WebGLRenderer({
+                        alpha: true,
+                        antialias: true
+                    });
+
+
+                renderer.setPixelRatio(
+                    Math.min(
+                        window.devicePixelRatio || 1,
+                        2
+                    )
+                );
+
+
+                renderer.setSize(
+                    window.innerWidth,
+                    window.innerHeight
+                );
+
+
+                threeContainer.appendChild(
+                    renderer.domElement
+                );
+
+
+                clock =
+                    new THREE.Clock();
+
+
+                const textureLoader =
+                    new THREE.TextureLoader();
+
+
+                const smokeTexture =
+                    textureLoader.load(
+                        "1000455138.jpg",
+                        texture => {
+
+                            texture.wrapS =
+                                texture.wrapT =
+                                    THREE.RepeatWrapping;
+
+                        }
+                    );
+
+
+                const uniforms = {
+
+                    u_time: {
+                        value: 0
+                    },
+
+                    u_resolution: {
+                        value:
+                            new THREE.Vector2(
+                                window.innerWidth,
+                                window.innerHeight
+                            )
+                    },
+
+                    u_texture: {
+                        value:
+                            smokeTexture
+                    }
+
+                };
+
+
+                smokeMaterial =
+                    new THREE.ShaderMaterial({
+
+                        vertexShader: `
+                            varying vec2 vUv;
+
+                            void main() {
+
+                                vUv = uv;
+
+                                gl_Position =
+                                    vec4(
+                                        position,
+                                        1.0
+                                    );
+                            }
+                        `,
+
+
+                        fragmentShader: `
+
+                            uniform float u_time;
+
+                            uniform vec2 u_resolution;
+
+                            uniform sampler2D u_texture;
+
+                            varying vec2 vUv;
+
+
+                            void main() {
+
+                                vec2 uv =
+                                    vUv;
+
+                                vec2 textureUv =
+                                    uv;
+
+
+                                textureUv.x +=
+                                    sin(
+                                        u_time * 0.035 +
+                                        textureUv.y * 2.0
+                                    ) * 0.018;
+
+
+                                textureUv.y +=
+                                    sin(
+                                        u_time * 0.025 +
+                                        textureUv.x * 2.0
+                                    ) * 0.012;
+
+
+                                vec4 tex =
+                                    texture2D(
+                                        u_texture,
+                                        textureUv
+                                    );
+
+
+                                float luminance =
+                                    dot(
+                                        tex.rgb,
+                                        vec3(
+                                            0.299,
+                                            0.587,
+                                            0.114
+                                        )
+                                    );
+
+
+                                vec3 pink =
+                                    vec3(
+                                        0.95,
+                                        0.08,
+                                        0.42
+                                    );
+
+
+                                vec3 darkPink =
+                                    vec3(
+                                        0.12,
+                                        0.005,
+                                        0.04
+                                    );
+
+
+                                vec3 color =
+                                    mix(
+                                        darkPink,
+                                        pink,
+                                        smoothstep(
+                                            0.18,
+                                            0.82,
+                                            luminance
+                                        ) * 0.72
+                                    );
+
+
+                                gl_FragColor =
+                                    vec4(
+                                        color,
+                                        0.72 +
+                                        luminance * 0.18
+                                    );
+
+                            }
+
+                        `,
+
+                        uniforms:
+                            uniforms,
+
+                        transparent:
+                            true
+
+                    });
+
+
+                scene.add(
+
+                    new THREE.Mesh(
+                        new THREE.PlaneGeometry(
+                            2,
+                            2
+                        ),
+                        smokeMaterial
+                    )
+
+                );
+
+
+                (function animateSmoke() {
+
+                    requestAnimationFrame(
+                        animateSmoke
+                    );
+
+
+                    if (
+                        smokeMaterial &&
+                        clock
+                    ) {
+
+                        smokeMaterial
+                            .uniforms
+                            .u_time
+                            .value =
+                                clock.getElapsedTime();
+
+
+                        renderer.render(
+                            scene,
+                            camera
+                        );
+
+                    }
+
+                })();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Three.js error:",
+                    error
+                );
+
+                threeContainer.style.display =
+                    "none";
+
+            }
+
         }
 
-        function animateThreeSmoke() {
-            requestAnimationFrame(animateThreeSmoke);
-            if(smokeMaterial) {
-                smokeMaterial.uniforms.u_time.value = clock.getElapsedTime();
-            }
-            renderer.render(scene, camera);
+
+        /* =====================================================
+           SPARKLES
+        ===================================================== */
+
+        function initSparkles() {
+
+            sparkleCanvas.width =
+                window.innerWidth;
+
+            sparkleCanvas.height =
+                window.innerHeight;
+
+
+            const ctx =
+                sparkleCanvas.getContext("2d");
+
+
+            if (!ctx) return;
+
+
+            const particles =
+                Array.from(
+                    {
+                        length: 25
+                    },
+                    () => ({
+
+                        x:
+                            Math.random() *
+                            sparkleCanvas.width,
+
+                        y:
+                            Math.random() *
+                            sparkleCanvas.height,
+
+                        size:
+                            Math.random() * 2.5 +
+                            1,
+
+                        speedY:
+                            -(
+                                Math.random() *
+                                0.15 +
+                                0.05
+                            ),
+
+                        opacity:
+                            Math.random() *
+                            0.6 +
+                            0.3
+
+                    })
+                );
+
+
+            (function sparkleLoop() {
+
+                ctx.clearRect(
+                    0,
+                    0,
+                    sparkleCanvas.width,
+                    sparkleCanvas.height
+                );
+
+
+                particles.forEach(
+                    p => {
+
+                        p.y +=
+                            p.speedY;
+
+
+                        if (
+                            p.y < -20
+                        ) {
+
+                            p.y =
+                                sparkleCanvas.height +
+                                20;
+
+                        }
+
+
+                        ctx.save();
+
+
+                        ctx.translate(
+                            p.x,
+                            p.y
+                        );
+
+
+                        ctx.fillStyle =
+                            `rgba(
+                                255,
+                                255,
+                                255,
+                                ${p.opacity}
+                            )`;
+
+
+                        ctx.beginPath();
+
+
+                        ctx.arc(
+                            0,
+                            0,
+                            p.size,
+                            0,
+                            Math.PI * 2
+                        );
+
+
+                        ctx.fill();
+
+
+                        ctx.restore();
+
+                    }
+                );
+
+
+                requestAnimationFrame(
+                    sparkleLoop
+                );
+
+            })();
+
         }
 
-        window.addEventListener('resize', () => {
-            if(renderer && smokeMaterial) {
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                smokeMaterial.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-            }
-            sparkleCanvas.width = window.innerWidth;
-            sparkleCanvas.height = window.innerHeight;
-        });
 
-        // تشغيل نظام دخان الـ Texture والـ Shader المتطور
+        /* =====================================================
+           INIT EFFECTS
+        ===================================================== */
+
         initThreeSmoke();
 
-        // تشغيل ومضات النجوم فوق الدخان
-        function initSparkles() {
-            sparkleCanvas.width = window.innerWidth;
-            sparkleCanvas.height = window.innerHeight;
-            const ctx = sparkleCanvas.getContext('2d');
-            const particles = [];
-
-            class SparkleParticle {
-                constructor() {
-                    this.x = Math.random() * sparkleCanvas.width;
-                    this.y = Math.random() * sparkleCanvas.height;
-                    this.size = Math.random() * 2.5 + 1;
-                    this.speedX = Math.random() * 0.1 - 0.05;
-                    this.speedY = -(Math.random() * 0.15 + 0.05); 
-                    this.opacity = Math.random() * 0.6 + 0.3;
-                    this.phase = Math.random() * 100;
-                }
-                update() {
-                    this.x += this.speedX;
-                    this.y += this.speedY;
-                    if (this.y < -20) {
-                        this.y = sparkleCanvas.height + 20;
-                        this.x = Math.random() * sparkleCanvas.width;
-                    }
-                }
-                draw() {
-                    ctx.save();
-                    ctx.translate(this.x, this.y);
-                    let pulseOpacity = this.opacity * (0.4 + Math.sin(Date.now() * 0.003 + this.phase) * 0.6);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${pulseOpacity})`;
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = "#ffffff";
-                    ctx.beginPath();
-                    for (let i = 0; i < 4; i++) {
-                        ctx.rotate(Math.PI / 2);
-                        ctx.lineTo(0, this.size * 4.5);
-                        ctx.lineTo(this.size * 0.9, 0);
-                    }
-                    ctx.fill();
-                    ctx.restore();
-                }
-            }
-
-            for(let i=0; i<25; i++) particles.push(new SparkleParticle());
-
-            function loop() {
-                ctx.clearRect(0, 0, sparkleCanvas.width, sparkleCanvas.height);
-                particles.forEach(p => { p.update(); p.draw(); });
-                sparkleAnimationId = requestAnimationFrame(loop);
-            }
-            loop();
-        }
         initSparkles();
 
-        // --- التحكم بالأحداث وبقاء الخلفية تعمل أثناء الفيديو ---
-        startQuizBtn.addEventListener('click', () => {
-            unlockMobileAudio();
-            
-            // تعديل جوهري: الدخان والبريق يبقيان شغالين ولا يختفيان، بل نمنحهما فقط تعتيماً فخماً وخفيفاً ليركز المستخدم على الفيديو
-            threeContainer.classList.add('dimmed-smoke');
-            sparkleCanvas.style.opacity = "0.6"; 
 
-            introVideo.muted = false;
-            introVideo.currentTime = 0;
-            introVideo.play().catch(e => {});
+        /* =====================================================
+           RESIZE
+        ===================================================== */
 
-            // إخفاء كارت الواجهة الترحيبية تدريجياً بذكاء لإبراز مساحة تشغيل الفيديو
-            setTimeout(() => {
-                quizBox.classList.add('quiz-pull-out');
-            }, 2500); 
-        });
+        window.addEventListener(
+            "resize",
+            () => {
 
-        // اختفاء الدخان والتحول لخلفيات الأسئلة يتم *فقط* بعد انتهاء الفيديو تماماً
-        introVideo.addEventListener('ended', () => {
-            welcomeScreen.classList.add('hidden');
-            questionScreen.classList.remove('hidden');
-            overlayLayer.classList.remove('welcome-overlay');
-            
-            // الآن انتهى الفيديو، نقوم بإخفاء حاوية الدخان المبرمجة لتبدأ خلفيات الأسئلة بالظهور بالترتيب
-            threeContainer.classList.add('hidden'); 
-            sparkleCanvas.classList.add('hidden');
-            bgLayer.style.opacity = "1";
+                if (renderer) {
 
-            quizBox.classList.remove('quiz-pull-out');
-            quizBox.classList.add('quiz-pull-in-prepare');
-            
-            welcomeSound.currentTime = 0;
-            welcomeSound.play().catch(err => {});
+                    renderer.setSize(
+                        window.innerWidth,
+                        window.innerHeight
+                    );
 
-            setTimeout(() => {
-                quizBox.style.transition = '';
-                loadQuestion();
-            }, 50);
-        });
+                }
+
+
+                sparkleCanvas.width =
+                    particleCanvas.width =
+                        window.innerWidth;
+
+
+                sparkleCanvas.height =
+                    particleCanvas.height =
+                        window.innerHeight;
+
+            }
+        );
+
+
+        /* =====================================================
+           WELCOME → QUESTIONS
+           
+           IMPORTANT:
+           NO video.play()
+           NO video.ended dependency
+        ===================================================== */
+
+        function continueFromWelcome() {
+
+            if (welcomeTransitioned)
+                return;
+
+
+            welcomeTransitioned =
+                true;
+
+
+            /*
+             * Stop video if it happens
+             * to be playing.
+             *
+             * Video is NOT required
+             * for the transition.
+             */
+
+            try {
+
+                introVideo.pause();
+
+            } catch (e) {}
+
+
+            quizBox.classList.add(
+                "quiz-pull-out"
+            );
+
+
+            setTimeout(
+                () => {
+
+                    welcomeScreen.classList.add(
+                        "hidden"
+                    );
+
+
+                    questionScreen.classList.remove(
+                        "hidden"
+                    );
+
+
+                    overlayLayer.classList.remove(
+                        "welcome-overlay"
+                    );
+
+
+                    threeContainer.classList.add(
+                        "dimmed-smoke"
+                    );
+
+
+                    bgLayer.style.opacity =
+                        "1";
+
+
+                    quizBox.classList.remove(
+                        "quiz-pull-out"
+                    );
+
+
+                    quizBox.classList.add(
+                        "quiz-pull-in-prepare"
+                    );
+
+
+                    /*
+                     * Welcome sound starts
+                     * after the click.
+                     */
+
+                    try {
+
+                        welcomeSound.currentTime =
+                            0;
+
+                        welcomeSound
+                            .play()
+                            .catch(() => {});
+
+                    } catch (e) {}
+
+
+                    setTimeout(
+                        () => {
+
+                            quizBox.style.transition =
+                                "";
+
+                            loadQuestion();
+
+                        },
+                        50
+                    );
+
+                },
+                300
+            );
+
+        }
+
+
+        /* =====================================================
+           START BUTTON
+           
+           THIS IS THE IMPORTANT FIX
+        ===================================================== */
+
+        startQuizBtn.addEventListener(
+            "click",
+            () => {
+
+                if (quizStarted)
+                    return;
+
+
+                quizStarted =
+                    true;
+
+
+                /*
+                 * Unlock sounds from
+                 * the user's interaction.
+                 */
+
+                unlockMobileAudio();
+
+
+                /*
+                 * Direct transition.
+                 *
+                 * We DO NOT call:
+                 * introVideo.play()
+                 *
+                 * We DO NOT wait for:
+                 * introVideo.ended
+                 */
+
+                continueFromWelcome();
+
+            }
+        );
+
+
+        /* =====================================================
+           LOAD QUESTION
+        ===================================================== */
 
         function loadQuestion() {
-            const currentData = quizData[currentQuestionIndex];
-            quizBox.classList.remove('quiz-pull-out', 'quiz-pull-in-prepare');
-            bgLayer.classList.remove('bg-blur-effect');
-            
-            bgLayer.style.backgroundImage = `url('${currentData.image}')`;
-            questionText.innerText = currentData.question;
-            optionsContainer.innerHTML = '';
 
-            currentData.options.forEach((option, index) => {
-                const button = document.createElement('button');
-                button.classList.add('option-btn');
-                button.innerText = option;
-                button.addEventListener('click', (e) => handleAnswer(e, index));
-                optionsContainer.appendChild(button);
-            });
+            const currentData =
+                quizData[
+                    currentQuestionIndex
+                ];
+
+
+            if (!currentData)
+                return;
+
+
+            quizBox.classList.remove(
+                "quiz-pull-out",
+                "quiz-pull-in-prepare"
+            );
+
+
+            bgLayer.style.backgroundImage =
+                `url("${currentData.image}")`;
+
+
+            questionText.innerText =
+                currentData.question;
+
+
+            optionsContainer.innerHTML =
+                "";
+
+
+            currentData.options.forEach(
+                (option, index) => {
+
+                    const button =
+                        document.createElement(
+                            "button"
+                        );
+
+
+                    button.type =
+                        "button";
+
+
+                    button.classList.add(
+                        "option-btn"
+                    );
+
+
+                    button.innerText =
+                        option;
+
+
+                    button.addEventListener(
+                        "click",
+                        event => {
+
+                            handleAnswer(
+                                event,
+                                index
+                            );
+
+                        }
+                    );
+
+
+                    optionsContainer.appendChild(
+                        button
+                    );
+
+                }
+            );
+
+
+            isAnswering =
+                false;
+
         }
 
-        function handleAnswer(e, selectedIndex) {
-            const selectedButton = e.target;
-            const allButtons = optionsContainer.querySelectorAll('.option-btn');
-            const currentData = quizData[currentQuestionIndex];
 
-            totalScore += currentData.scores[selectedIndex];
-            clickSound.currentTime = 0;
-            clickSound.play().catch(e => {});
-            selectedButton.classList.add('btn-selected');
+        /* =====================================================
+           ANSWER
+        ===================================================== */
 
-            allButtons.forEach(btn => { if (btn !== selectedButton) btn.classList.add('disabled'); });
+        function handleAnswer(
+            event,
+            selectedIndex
+        ) {
 
-            setTimeout(() => {
-                quizBox.classList.add('quiz-pull-out');
-                bgLayer.classList.add('bg-blur-effect');
-
-                setTimeout(() => {
-                    currentQuestionIndex++;
-                    if (currentQuestionIndex < quizData.length) {
-                        quizBox.style.transition = 'none';
-                        quizBox.classList.remove('quiz-pull-out');
-                        quizBox.classList.add('quiz-pull-in-prepare');
-                        setTimeout(() => {
-                            quizBox.style.transition = '';
-                            loadQuestion();
-                        }, 50);
-                    } else {
-                        showResults();
-                    }
-                }, 600);
-            }, 600);
-        }
-
-        function triggerFastConfetti() {
-            var duration = 2 * 1000; 
-            var end = Date.now() + duration;
-            (function frame() {
-                confetti({ particleCount: 12, angle: 60, spread: 65, origin: { x: 0, y: 0.85 } });
-                confetti({ particleCount: 12, angle: 120, spread: 65, origin: { x: 1, y: 0.85 } });
-                if (Date.now() < end) { requestAnimationFrame(frame); }
-            }());
-        }
-
-        function showResults() {
-            questionScreen.classList.add('hidden');
-            resultScreen.classList.remove('hidden');
-            quizBox.style.transition = '';
-            quizBox.classList.remove('quiz-pull-out', 'quiz-pull-in-prepare');
-            overlayLayer.classList.add('welcome-overlay'); 
-            
-            let finalCalculatedScore = (totalScore / 6).toFixed(1);
-            let resultWord = "";
-            let resultDescription = "";
-            
-            if (finalCalculatedScore >= 91.1 && finalCalculatedScore <= 100.0) {
-                document.body.classList.add('mode-glow-bg');
-                resultWord = "Pink Glow";
-                resultDescription = "Freshness, confidence, and care are clearly part of your daily whisper energy, a little care keeps it unforgettable.";
-                triggerFastConfetti();
-            } else if (finalCalculatedScore >= 70.0 && finalCalculatedScore <= 91.0) {
-                document.body.classList.add('mode-balance-bg');
-                resultWord = "Pink Balance";
-                resultDescription = "small daily details may be affecting your whisper freshness and confidence more than you notice, it only needs the right touch.";
-            } else if (finalCalculatedScore < 70.0) {
-                document.body.classList.add('mode-revival-bg');
-                resultWord = "Pink Revival";
-                resultDescription = "Your whisper is ready for a fresh beginning, one step could unlock your full Pink Glow.";
+            if (
+                isAnswering ||
+                quizFinished
+            ) {
+                return;
             }
-            
-            badgeContainer.innerText = resultWord;
-            scoreContainer.innerText = `${finalCalculatedScore}%`;
-            descriptionContainer.innerText = resultDescription;
+
+
+            isAnswering =
+                true;
+
+
+            const selectedButton =
+                event.currentTarget;
+
+
+            const currentData =
+                quizData[
+                    currentQuestionIndex
+                ];
+
+
+            const rect =
+                selectedButton
+                    .getBoundingClientRect();
+
+
+            /*
+             * Particle burst
+             */
+
+            particleSystem.burstParticles(
+                rect.left +
+                    rect.width / 2,
+
+                rect.top +
+                    rect.height / 2,
+
+                35
+            );
+
+
+            /*
+             * Score
+             */
+
+            totalScore +=
+                currentData.scores[
+                    selectedIndex
+                ];
+
+
+            /*
+             * Store answer
+             */
+
+            userResponsesPayload[
+                currentData.id
+            ] =
+                currentData.options[
+                    selectedIndex
+                ];
+
+
+            /*
+             * Click sound
+             */
+
+            try {
+
+                clickSound.currentTime =
+                    0;
+
+                clickSound
+                    .play()
+                    .catch(() => {});
+
+            } catch (e) {}
+
+
+            selectedButton.classList.add(
+                "btn-selected"
+            );
+
+
+            /*
+             * Transition
+             */
+
+            setTimeout(
+                () => {
+
+                    quizBox.classList.add(
+                        "quiz-pull-out"
+                    );
+
+
+                    setTimeout(
+                        () => {
+
+                            currentQuestionIndex++;
+
+
+                            if (
+                                currentQuestionIndex <
+                                quizData.length
+                            ) {
+
+                                quizBox.style.transition =
+                                    "none";
+
+
+                                quizBox.classList.remove(
+                                    "quiz-pull-out"
+                                );
+
+
+                                quizBox.classList.add(
+                                    "quiz-pull-in-prepare"
+                                );
+
+
+                                setTimeout(
+                                    () => {
+
+                                        quizBox.style.transition =
+                                            "";
+
+                                        loadQuestion();
+
+                                    },
+                                    50
+                                );
+
+                            } else {
+
+                                shipDataAndShowResults();
+
+                            }
+
+                        },
+                        400
+                    );
+
+                },
+                400
+            );
+
         }
+
+
+        /* =====================================================
+           SCORE
+        ===================================================== */
+
+        function calculateScore() {
+
+            return Number(
+                (
+                    totalScore /
+                    quizData.length
+                ).toFixed(1)
+            );
+
+        }
+
+
+        /* =====================================================
+           RESULT TYPE
+        ===================================================== */
+
+        function getResultByScore(
+            score
+        ) {
+
+            if (
+                score >= 91.1
+            ) {
+
+                return "Pink Glow";
+
+            }
+
+
+            if (
+                score >= 70
+            ) {
+
+                return "Pink Balance";
+
+            }
+
+
+            return "Pink Revival";
+
+        }
+
+
+        /* =====================================================
+           CODE
+        ===================================================== */
+
+        function generatePinkWhisperCode() {
+
+            const now =
+                new Date();
+
+
+            const d =
+                String(
+                    now.getDate()
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+
+            const m =
+                String(
+                    now.getMonth() + 1
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+
+            const y =
+                String(
+                    now.getFullYear()
+                ).slice(-2);
+
+
+            const rand =
+                Math.floor(
+                    1000 +
+                    Math.random() *
+                    9000
+                );
+
+
+            return `PW-${d}${m}${y}-${rand}`;
+
+        }
+
+
+        /* =====================================================
+           GOOGLE SHEETS
+        ===================================================== */
+
+        async function sendToGoogleSheets(
+            payload
+        ) {
+
+            try {
+
+                await fetch(
+                    GOOGLE_SCRIPT_URL,
+                    {
+
+                        method:
+                            "POST",
+
+                        mode:
+                            "no-cors",
+
+                        headers: {
+
+                            "Content-Type":
+                                "text/plain;charset=UTF-8"
+
+                        },
+
+                        body:
+                            JSON.stringify(
+                                payload
+                            )
+
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Google Sheets error:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           SEND DATA + RESULTS
+        ===================================================== */
+
+        function shipDataAndShowResults() {
+
+            if (quizFinished)
+                return;
+
+
+            quizFinished =
+                true;
+
+
+            const score =
+                calculateScore();
+
+
+            const resultWord =
+                getResultByScore(
+                    score
+                );
+
+
+            finalGeneratedCode =
+                generatePinkWhisperCode();
+
+
+            /*
+             * Send to Google Sheets
+             */
+
+            sendToGoogleSheets({
+
+                code:
+                    finalGeneratedCode,
+
+                result:
+                    resultWord,
+
+                score:
+                    `${score}%`,
+
+                q1:
+                    userResponsesPayload["q1"] ||
+                    "",
+
+                q2:
+                    userResponsesPayload["q2"] ||
+                    "",
+
+                q3:
+                    userResponsesPayload["q3"] ||
+                    "",
+
+                q4:
+                    userResponsesPayload["q4"] ||
+                    "",
+
+                q5:
+                    userResponsesPayload["q5"] ||
+                    "",
+
+                q6:
+                    userResponsesPayload["q6"] ||
+                    ""
+
+            });
+
+
+            /*
+             * Show result immediately.
+             */
+
+            showResults(
+                resultWord,
+                score,
+                finalGeneratedCode
+            );
+
+        }
+
+
+        /* =====================================================
+           SHOW RESULTS
+        ===================================================== */
+
+        function showResults(
+            resultWord,
+            score,
+            code
+        ) {
+
+            questionScreen.classList.add(
+                "hidden"
+            );
+
+
+            resultScreen.classList.remove(
+                "hidden"
+            );
+
+
+            quizBox.classList.remove(
+                "quiz-pull-out",
+                "quiz-pull-in-prepare"
+            );
+
+
+            /*
+             * Result background
+             */
+
+            if (
+                resultWord ===
+                "Pink Glow"
+            ) {
+
+                document.body.style.backgroundImage =
+                    "url('bg1.png')";
+
+
+                if (
+                    typeof confetti ===
+                    "function"
+                ) {
+
+                    confetti({
+
+                        particleCount:
+                            100,
+
+                        spread:
+                            70,
+
+                        origin: {
+                            y: 0.6
+                        }
+
+                    });
+
+                }
+
+            } else if (
+                resultWord ===
+                "Pink Balance"
+            ) {
+
+                document.body.style.backgroundImage =
+                    "url('bg2.png')";
+
+            } else {
+
+                document.body.style.backgroundImage =
+                    "url('bg3.png')";
+
+            }
+
+
+            /*
+             * Result content
+             */
+
+            badgeContainer.innerText =
+                resultWord;
+
+
+            scoreContainer.innerText =
+                `${score}%`;
+
+
+            descriptionContainer.innerText =
+                "تحب تعرف شنو يعني هاي النتيجة؟ اضغط على الزر بالاسفل 👇";
+
+
+            codeTextPlaceholder.innerText =
+                code;
+
+
+            /*
+             * WhatsApp
+             */
+
+            const msg =
+                encodeURIComponent(
+                    `${code}\nارسل الكود`
+                );
+
+
+            whatsappRedirectBtn.href =
+                `https://wa.me/${
+                    WHATSAPP_PHONE_NUMBER
+                }?text=${msg}`;
+
+        }
+
+
+        /* =====================================================
+           COPY CODE
+        ===================================================== */
+
+        premiumCodeBox.addEventListener(
+            "click",
+            async () => {
+
+                if (
+                    !finalGeneratedCode
+                ) {
+                    return;
+                }
+
+
+                try {
+
+                    await navigator
+                        .clipboard
+                        .writeText(
+                            finalGeneratedCode
+                        );
+
+
+                    alert(
+                        "تم نسخ الكود بنجاح: " +
+                        finalGeneratedCode
+                    );
+
+                } catch (error) {
+
+                    alert(
+                        "الكود الخاص بك هو: " +
+                        finalGeneratedCode
+                    );
+
+                }
+
+            }
+        );
+
     </script>
+
 </body>
+
 </html>
